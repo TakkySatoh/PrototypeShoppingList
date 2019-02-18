@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">PrototypeShoppingList</string>
+    <string-array name="shopping_list">
+        <item name="list1">リスト1</item>
+        <item name="list2">リスト2</item>
+        <item name="list3">リスト3</item>
+    </string-array>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string-array name="messages">
+        <item name="text1">これはフラグメント1です</item>
+        <item name="text2">これはフラグメント2です</item>
+        <item name="text3">これはフラグメント3です</item>
+    </string-array>
 </resources>
