@@ -1,8 +1,6 @@
 package asia.takkyssquare.android;
 
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -11,7 +9,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
-public class MainActivity extends AppCompatActivity {
+import asia.takkyssquare.android.dummy.DummyContent;
+
+public class MainActivity extends AppCompatActivity implements ShoppingListFragment.OnListFragmentInteractionListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,14 +44,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void replaceFragment(int position) {
-        Fragment fragment = new MainFragment();
+        Fragment fragment = new ShoppingListFragment();
         Bundle bundle = new Bundle();
-        String message = getResources().getStringArray(R.array.messages)[position];
-        bundle.putString("message", message);
+        String listName = getResources().getStringArray(R.array.shopping_list)[position];
+        bundle.putInt("position", position);
+        bundle.putString("listName", listName);
         fragment.setArguments(bundle);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.content, fragment)
                 .addToBackStack(null)
                 .commit();
+    }
+
+    @Override
+    public void onListFragmentInteraction(DummyContent.DummyItem item) {
+
     }
 }

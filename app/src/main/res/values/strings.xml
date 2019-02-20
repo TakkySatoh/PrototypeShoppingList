@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">PrototypeShoppingList</string>
+    <string name="title_to_buy">購入予定</string>
+    <string name="title_bought">購入済</string>
     <string-array name="shopping_list">
         <item name="list1">リスト1</item>
         <item name="list2">リスト2</item>

@@ -16,7 +16,7 @@ public class DummyContent {
     /**
      * An array of sample (dummy) items.
      */
-    public static final List<DummyItem> ITEMS = new ArrayList<DummyItem>();
+    public static List<DummyItem> toBuyItems = new ArrayList<DummyItem>();
 
     /**
      * A map of sample (dummy) items, by ID.
@@ -24,6 +24,8 @@ public class DummyContent {
     public static final Map<String, DummyItem> ITEM_MAP = new HashMap<String, DummyItem>();
 
     private static final int COUNT = 25;
+
+    public static List<DummyItem> boughtItems = new ArrayList<DummyItem>();
 
     static {
         // Add some sample items.
@@ -33,7 +35,7 @@ public class DummyContent {
     }
 
     private static void addItem(DummyItem item) {
-        ITEMS.add(item);
+        toBuyItems.add(item);
         ITEM_MAP.put(item.id, item);
     }
 
@@ -48,6 +50,11 @@ public class DummyContent {
             builder.append("\nMore details information here.");
         }
         return builder.toString();
+    }
+
+    private static void moveItem(List<DummyItem> list, List<DummyItem> target, int position) {
+        DummyItem item = list.remove(position);
+        target.add(0, item);
     }
 
     /**
