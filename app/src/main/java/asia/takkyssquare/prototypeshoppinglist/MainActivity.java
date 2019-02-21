@@ -1,5 +1,6 @@
-package asia.takkyssquare.android;
+package asia.takkyssquare.prototypeshoppinglist;
 
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,9 +10,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
-import asia.takkyssquare.android.dummy.DummyContent;
+import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent;
 
 public class MainActivity extends AppCompatActivity implements ShoppingListFragment.OnListFragmentInteractionListener {
+
+    public static final int REQUEST_CODE = 100;
+    public static final int RESULT_OK = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +62,10 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
     @Override
     public void onListFragmentInteraction(DummyContent.DummyItem item) {
-
+        Intent intent = new Intent(this, ShoppingItemEditorActivity.class);
+        intent.putExtra("id", item.id);
+        intent.putExtra("name", item.content);
+        intent.putExtra("details", item.details);
+        startActivityForResult(intent,REQUEST_CODE);
     }
 }

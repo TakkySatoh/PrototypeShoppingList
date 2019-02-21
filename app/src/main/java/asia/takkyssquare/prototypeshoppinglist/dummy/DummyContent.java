@@ -1,4 +1,4 @@
-package asia.takkyssquare.android.dummy;
+package asia.takkyssquare.prototypeshoppinglist.dummy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +23,7 @@ public class DummyContent {
      */
     public static final Map<String, DummyItem> ITEM_MAP = new HashMap<String, DummyItem>();
 
-    private static final int COUNT = 25;
+    private static final int COUNT = 10;
 
     public static List<DummyItem> boughtItems = new ArrayList<DummyItem>();
 
@@ -50,11 +50,6 @@ public class DummyContent {
             builder.append("\nMore details information here.");
         }
         return builder.toString();
-    }
-
-    private static void moveItem(List<DummyItem> list, List<DummyItem> target, int position) {
-        DummyItem item = list.remove(position);
-        target.add(0, item);
     }
 
     /**

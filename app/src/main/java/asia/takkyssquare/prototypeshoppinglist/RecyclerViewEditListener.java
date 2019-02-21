@@ -1,8 +1,8 @@
-package asia.takkyssquare.android;
+package asia.takkyssquare.prototypeshoppinglist;
 
 import java.util.List;
 
-import asia.takkyssquare.android.dummy.DummyContent;
+import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent;
 
 public interface RecyclerViewEditListener {
     void insertToRecyclerView(MyItemRecyclerViewAdapter adapter, List<DummyContent.DummyItem> list, DummyContent.DummyItem item);

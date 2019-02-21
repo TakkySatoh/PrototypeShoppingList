@@ -1,4 +1,4 @@
-package asia.takkyssquare.android;
+package asia.takkyssquare.prototypeshoppinglist;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ public class ShoppingItemContent {
 
 
 
-    private class ShoppingItem {
+    public class ShoppingItem {
         private boolean hasGot;
         private String name;
         private String amount;

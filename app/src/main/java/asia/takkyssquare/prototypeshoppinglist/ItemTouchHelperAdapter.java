@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package asia.takkyssquare.android;
+package asia.takkyssquare.prototypeshoppinglist;
 
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -55,4 +55,5 @@ public interface ItemTouchHelperAdapter {
      * @see RecyclerView.ViewHolder#getAdapterPosition()
      */
     void onItemDismiss(int position);
+
 }

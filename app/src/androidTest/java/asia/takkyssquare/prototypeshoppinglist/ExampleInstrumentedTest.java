@@ -1,4 +1,4 @@
-package asia.takkyssquare.android;
+package asia.takkyssquare.prototypeshoppinglist;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

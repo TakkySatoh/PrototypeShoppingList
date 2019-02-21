@@ -1,6 +1,7 @@
-package asia.takkyssquare.android;
+package asia.takkyssquare.prototypeshoppinglist;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -10,12 +11,11 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import java.util.List;
 
-import asia.takkyssquare.android.dummy.DummyContent;
-import asia.takkyssquare.android.dummy.DummyContent.DummyItem;
+import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent;
+import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent.DummyItem;
 
 /**
  * A fragment representing a list of Items.
@@ -24,6 +24,8 @@ import asia.takkyssquare.android.dummy.DummyContent.DummyItem;
  * interface.
  */
 public class ShoppingListFragment extends Fragment implements OnStartDragListener, RecyclerViewEditListener {
+
+    private static final int REQUEST_CODE = 100;
 
     // TODO: Customize parameter argument names
     private static final String ARG_COLUMN_COUNT = "column-count";
@@ -70,14 +72,18 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
 
         // Set the adapter
 //        if (view instanceof RecyclerView) {
+
         Context context = view.getContext();
+
 //        tvListName = view.findViewById(R.id.tvListName);
-        Bundle args = getArguments();
+//        Bundle args = getArguments();
 //            String[] listNames = mActivity.getResources().getStringArray(R.array.shopping_list);
 //            int position = args.getInt("position");
 //        String listName = args.getString("listName");
 //        tvListName.setText(listName);
 //            tvListName.setText(listNames[position]);
+
+//      「購入予定」のアイテムのリストをRecyclerViewとして画面に表示
         RecyclerView rvListToBuy = view.findViewById(R.id.rvListToBuy);
         if (mColumnCount <= 1) {
             rvListToBuy.setLayoutManager(new LinearLayoutManager(context));
@@ -90,6 +96,8 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         mToBuyItemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(mToBuyAdapter));
         mToBuyItemTouchHelper.attachToRecyclerView(rvListToBuy);
 
+//        「購入済」のアイテムのリストをRecyclerViewとして画面に表示
+//        (※現時点では項目数0のため、画面表示無し)
         RecyclerView rvListBought = view.findViewById(R.id.rvListBought);
         if (mColumnCount <= 1) {
             rvListBought.setLayoutManager(new LinearLayoutManager(context));
@@ -97,6 +105,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
             rvListBought.setLayoutManager(new GridLayoutManager(context, mColumnCount));
         }
         mBoughtAdapter = new MyItemRecyclerViewAdapter(DummyContent.boughtItems, mListener, this, this);
+        rvListBought.setAdapter(mBoughtAdapter);
         mBoughtItemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(mBoughtAdapter));
         mBoughtItemTouchHelper.attachToRecyclerView(rvListBought);
 
@@ -121,6 +130,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         mListener = null;
     }
 
+//    「購入予定」アイテムリストの項目長押し/ハンドル押下時に並び替えアクションを実行
     @Override
     public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
         mToBuyItemTouchHelper.startDrag(viewHolder);
@@ -170,11 +180,20 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         return charge;
     }
 
+//    両RecyclerViewの項目中、チェックボックスの状態遷移に応じて、両リスト間を項目が移動
     public void moveItemBetweenRecyclerViews(boolean isChecked, int position) {
         if (isChecked) {
             mBoughtAdapter.addItem(mToBuyAdapter.removeItem(position));
         } else {
             mToBuyAdapter.addItem(mBoughtAdapter.removeItem(position));
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE && resultCode == MainActivity.RESULT_OK){
+
         }
     }
 

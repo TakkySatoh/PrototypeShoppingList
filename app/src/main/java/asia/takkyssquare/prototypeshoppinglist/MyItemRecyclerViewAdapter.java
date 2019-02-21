@@ -1,5 +1,6 @@
-package asia.takkyssquare.android;
+package asia.takkyssquare.prototypeshoppinglist;
 
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -10,8 +11,8 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import asia.takkyssquare.android.ShoppingListFragment.OnListFragmentInteractionListener;
-import asia.takkyssquare.android.dummy.DummyContent.DummyItem;
+import asia.takkyssquare.prototypeshoppinglist.ShoppingListFragment.OnListFragmentInteractionListener;
+import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent.DummyItem;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,13 +24,13 @@ import java.util.List;
  */
 public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecyclerViewAdapter.RecyclerViewHolder> implements ItemTouchHelperAdapter {
 
-    private final List<DummyItem> mValues;
+    private final List<DummyItem> mItemList;
     private final OnListFragmentInteractionListener mListener;
     private final OnStartDragListener mDragStartListener;
     private final RecyclerViewEditListener mEditListener;
 
     public MyItemRecyclerViewAdapter(List<DummyItem> items, OnListFragmentInteractionListener listener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
-        mValues = items;
+        mItemList = items;
         mListener = listener;
         mDragStartListener = dragListener;
         mEditListener = editListener;
@@ -44,9 +45,9 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 
     @Override
     public void onBindViewHolder(final RecyclerViewHolder holder, final int position) {
-        holder.mItem = mValues.get(position);
-        holder.mIdView.setText(mValues.get(position).id);
-        holder.mContentView.setText(mValues.get(position).content);
+        holder.mItem = mItemList.get(position);
+        holder.mIdView.setText(mItemList.get(position).id);
+        holder.mContentView.setText(mItemList.get(position).content);
 
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,6 +64,7 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mEditListener.moveItemBetweenRecyclerViews(isChecked, position);
+                buttonView.setChecked(!isChecked);
             }
         });
 
@@ -79,33 +81,34 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
 
     @Override
     public int getItemCount() {
-        return mValues.size();
+        return mItemList.size();
     }
 
 
-    public void addItem(DummyItem item) {
-        mValues.add(0, item);
+    public boolean addItem(DummyItem item) {
+        mItemList.add(0, item);
         notifyItemInserted(0);
-        notifyDataSetChanged();
+//        notifyDataSetChanged();
+        return true;
     }
 
     public DummyItem removeItem(int position) {
-        DummyItem item = mValues.remove(position);
+        DummyItem item = mItemList.remove(position);
         notifyItemRemoved(position);
-        notifyDataSetChanged();
+//        notifyDataSetChanged();
         return item;
     }
 
     @Override
     public boolean onItemMove(int fromPosition, int toPosition) {
-        Collections.swap(mValues, fromPosition, toPosition);
+        Collections.swap(mItemList, fromPosition, toPosition);
         notifyItemMoved(fromPosition, toPosition);
         return true;
     }
 
     @Override
     public void onItemDismiss(int position) {
-        mValues.remove(position);
+        mItemList.remove(position);
         notifyItemRemoved(position);
     }
 

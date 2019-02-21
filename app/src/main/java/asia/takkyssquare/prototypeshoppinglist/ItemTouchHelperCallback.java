@@ -1,4 +1,4 @@
-package asia.takkyssquare.android;
+package asia.takkyssquare.prototypeshoppinglist;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;

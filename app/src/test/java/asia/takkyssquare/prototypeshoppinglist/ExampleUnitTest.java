@@ -1,4 +1,4 @@
-package asia.takkyssquare.android;
+package asia.takkyssquare.prototypeshoppinglist;
 
 import org.junit.Test;
 
