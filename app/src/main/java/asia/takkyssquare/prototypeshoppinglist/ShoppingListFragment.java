@@ -25,7 +25,8 @@ import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent.DummyItem;
  */
 public class ShoppingListFragment extends Fragment implements OnStartDragListener, RecyclerViewEditListener {
 
-    private static final int REQUEST_CODE = 100;
+    private static final int REQUEST_CODE_CREATE = 100;
+    private static final int REQUEST_CODE_UPDATE = 200;
 
     // TODO: Customize parameter argument names
     private static final String ARG_COLUMN_COUNT = "column-count";
@@ -192,7 +193,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE && resultCode == MainActivity.RESULT_OK){
+        if (requestCode == REQUEST_CODE_CREATE && resultCode == MainActivity.RESULT_OK){
 
         }
     }
@@ -209,7 +210,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
      */
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onListFragmentInteraction(DummyItem item);
+        void onListFragmentInteraction(DummyItem item, int requestCode);
     }
 
 }

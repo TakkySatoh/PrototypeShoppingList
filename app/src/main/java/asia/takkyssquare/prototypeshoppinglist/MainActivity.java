@@ -61,11 +61,12 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
     }
 
     @Override
-    public void onListFragmentInteraction(DummyContent.DummyItem item) {
+    public void onListFragmentInteraction(DummyContent.DummyItem item, int requestCode) {
         Intent intent = new Intent(this, ShoppingItemEditorActivity.class);
+        intent.putExtra("requestCode",requestCode);
         intent.putExtra("id", item.id);
         intent.putExtra("name", item.content);
         intent.putExtra("details", item.details);
-        startActivityForResult(intent,REQUEST_CODE);
+        startActivityForResult(intent, requestCode);
     }
 }

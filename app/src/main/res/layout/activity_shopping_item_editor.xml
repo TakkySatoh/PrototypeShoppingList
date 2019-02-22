@@ -34,7 +34,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintStart_toEndOf="@+id/tvHasGot"
+        app:layout_constraintStart_toEndOf="@+id/tvItemTotalPrice"
         app:layout_constraintTop_toBottomOf="@+id/tbEditor" />
 
     <TextView
@@ -56,7 +56,7 @@
         android:ems="10"
         android:inputType="textPersonName"
         android:textSize="18sp"
-        app:layout_constraintStart_toEndOf="@+id/tvItemName"
+        app:layout_constraintStart_toStartOf="@+id/textView5"
         app:layout_constraintTop_toBottomOf="@+id/cbHasGot" />
 
     <TextView
@@ -78,7 +78,7 @@
         android:ems="10"
         android:inputType="number"
         android:textSize="18sp"
-        app:layout_constraintStart_toEndOf="@+id/tvItemAmount"
+        app:layout_constraintStart_toStartOf="@+id/textView5"
         app:layout_constraintTop_toBottomOf="@+id/etItemName" />
 
     <TextView
@@ -99,14 +99,14 @@
         android:layout_marginTop="18dp"
         android:text="@string/unit_jp"
         android:textSize="18sp"
-        app:layout_constraintStart_toEndOf="@+id/tvItemPrice"
+        app:layout_constraintEnd_toStartOf="@+id/etItemPrice"
+        app:layout_constraintStart_toEndOf="@+id/tvItemTotalPrice"
         app:layout_constraintTop_toBottomOf="@+id/etItemAmount" />
 
     <EditText
         android:id="@+id/etItemPrice"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:ems="10"
         android:inputType="number"
@@ -133,6 +133,7 @@
         android:layout_marginTop="18dp"
         android:text="@string/unit_jp"
         android:textSize="18sp"
+        app:layout_constraintEnd_toStartOf="@+id/etItemTotalPrice"
         app:layout_constraintStart_toEndOf="@+id/tvItemTotalPrice"
         app:layout_constraintTop_toBottomOf="@+id/etItemPrice" />
 
@@ -140,7 +141,6 @@
         android:id="@+id/etItemTotalPrice"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:ems="10"
         android:inputType="number"
@@ -169,7 +169,7 @@
         android:inputType="textPersonName"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/tvPlace"
+        app:layout_constraintStart_toEndOf="@+id/tvItemTotalPrice"
         app:layout_constraintTop_toBottomOf="@+id/etItemTotalPrice" />
 
     <TextView
@@ -191,10 +191,10 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:ems="10"
-        android:inputType="textPersonName"
+        android:inputType="textMultiLine"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/tvComment"
+        app:layout_constraintStart_toEndOf="@+id/tvItemTotalPrice"
         app:layout_constraintTop_toBottomOf="@+id/etPlace" />
 
     <Button

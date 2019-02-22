@@ -1,6 +1,6 @@
 package asia.takkyssquare.prototypeshoppinglist;
 
-import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -22,7 +22,10 @@ import java.util.List;
  * specified {@link OnListFragmentInteractionListener}.
  * TODO: Replace the implementation with code for your data type.
  */
-public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecyclerViewAdapter.RecyclerViewHolder> implements ItemTouchHelperAdapter {
+public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements ItemTouchHelperAdapter {
+
+    public static final int REQUEST_CODE_CREATE = 100;
+    public static final int REQUEST_CODE_UPDATE = 200;
 
     private final List<DummyItem> mItemList;
     private final OnListFragmentInteractionListener mListener;
@@ -37,14 +40,21 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
     }
 
     @Override
-    public RecyclerViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.fragment_item, parent, false);
-        return new RecyclerViewHolder(view);
+        switch (viewType) {
+            case 1:
+                return (RecyclerView.ViewHolder) new ToBuyItemViewHolder(view);
+            case 2:
+                return (RecyclerView.ViewHolder) new BoughtItemViewHolder(view);
+        }
+        return null;
     }
 
+
     @Override
-    public void onBindViewHolder(final RecyclerViewHolder holder, final int position) {
+    public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
         holder.mItem = mItemList.get(position);
         holder.mIdView.setText(mItemList.get(position).id);
         holder.mContentView.setText(mItemList.get(position).content);
@@ -55,7 +65,7 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
                 if (null != mListener) {
                     // Notify the active callbacks interface (the activity, if the
                     // fragment is attached to one) that an item has been selected.
-                    mListener.onListFragmentInteraction(holder.mItem);
+                    mListener.onListFragmentInteraction(holder.mItem, REQUEST_CODE_UPDATE);
                 }
             }
         });
@@ -64,7 +74,6 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mEditListener.moveItemBetweenRecyclerViews(isChecked, position);
-                buttonView.setChecked(!isChecked);
             }
         });
 
@@ -113,7 +122,8 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
     }
 
 
-    public class RecyclerViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder {
+    public class ToBuyItemViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder {
+        private int viewType = 1;
         public final View mView;
         public final CheckBox mCbHasGot;
         public final TextView mIdView;
@@ -122,7 +132,7 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
         public final ImageView mHandle;
         public DummyItem mItem;
 
-        public RecyclerViewHolder(View view) {
+        public ToBuyItemViewHolder(View view) {
             super(view);
             mView = view;
             mCbHasGot = (CheckBox) view.findViewById(R.id.cbHasGot);
@@ -146,6 +156,44 @@ public class MyItemRecyclerViewAdapter extends RecyclerView.Adapter<MyItemRecycl
         public void onItemClear() {
             mView.setElevation(0.0f);
 
+        }
+    }
+
+    public class BoughtItemViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder {
+
+        private int viewType = 2;
+        public final View mView;
+        public final CheckBox mCbHasGot;
+        public final TextView mIdView;
+        public final TextView mContentView;
+        public final TextView mAmountView;
+        public final ImageView mHandle;
+        public DummyItem mItem;
+
+        public BoughtItemViewHolder(@NonNull View itemView) {
+            super(itemView);
+            mView = itemView;
+            mCbHasGot = (CheckBox) itemView.findViewById(R.id.cbHasGot);
+            mCbHasGot.setChecked(false);
+            mIdView = (TextView) itemView.findViewById(R.id.item_number);
+            mContentView = (TextView) itemView.findViewById(R.id.content);
+            mAmountView = (TextView) itemView.findViewById(R.id.amount);
+            mHandle = (ImageView) itemView.findViewById(R.id.handle);
+        }
+
+        @Override
+        public String toString() {
+            return super.toString() + " '" + mContentView.getText() + "'";
+        }
+
+        @Override
+        public void onItemSelected() {
+            mView.setElevation(16.0f);
+        }
+
+        @Override
+        public void onItemClear() {
+            mView.setElevation(0.0f);
         }
     }
 }
