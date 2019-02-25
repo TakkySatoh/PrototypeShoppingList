@@ -91,7 +91,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         } else {
             rvListToBuy.setLayoutManager(new GridLayoutManager(context, mColumnCount));
         }
-        mToBuyAdapter = new MyItemRecyclerViewAdapter(DummyContent.toBuyItems, mListener, this, this);
+        mToBuyAdapter = new MyItemRecyclerViewAdapter(DummyContent.toBuyItems, false, mListener, this, this);
         rvListToBuy.setAdapter(mToBuyAdapter);
 //        }
         mToBuyItemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(mToBuyAdapter));
@@ -105,7 +105,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         } else {
             rvListBought.setLayoutManager(new GridLayoutManager(context, mColumnCount));
         }
-        mBoughtAdapter = new MyItemRecyclerViewAdapter(DummyContent.boughtItems, mListener, this, this);
+        mBoughtAdapter = new MyItemRecyclerViewAdapter(DummyContent.boughtItems, true, mListener, this, this);
         rvListBought.setAdapter(mBoughtAdapter);
         mBoughtItemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(mBoughtAdapter));
         mBoughtItemTouchHelper.attachToRecyclerView(rvListBought);
@@ -131,7 +131,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         mListener = null;
     }
 
-//    「購入予定」アイテムリストの項目長押し/ハンドル押下時に並び替えアクションを実行
+    //    「購入予定」アイテムリストの項目長押し/ハンドル押下時に並び替えアクションを実行
     @Override
     public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
         mToBuyItemTouchHelper.startDrag(viewHolder);
@@ -181,19 +181,23 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         return charge;
     }
 
-//    両RecyclerViewの項目中、チェックボックスの状態遷移に応じて、両リスト間を項目が移動
-    public void moveItemBetweenRecyclerViews(boolean isChecked, int position) {
-        if (isChecked) {
-            mBoughtAdapter.addItem(mToBuyAdapter.removeItem(position));
+    //    両RecyclerViewの項目中、チェックボックスの状態遷移に応じて、両リスト間を項目が移動
+    public void moveItemBetweenRecyclerViews(boolean hasGot, int position) {
+        if (!hasGot) {
+            DummyItem item = mToBuyAdapter.removeItem(position);
+            item.setHasGot(!item.isHasGot());
+            mBoughtAdapter.addItem(item);
         } else {
-            mToBuyAdapter.addItem(mBoughtAdapter.removeItem(position));
+            DummyItem item = mBoughtAdapter.removeItem(position);
+            item.setHasGot(!item.isHasGot());
+            mToBuyAdapter.addItem(item);
         }
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_CREATE && resultCode == MainActivity.RESULT_OK){
+        if (requestCode == REQUEST_CODE_CREATE && resultCode == MainActivity.RESULT_OK) {
 
         }
     }

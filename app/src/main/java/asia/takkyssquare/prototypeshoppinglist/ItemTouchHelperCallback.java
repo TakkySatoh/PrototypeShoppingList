@@ -43,10 +43,10 @@ class ItemTouchHelperCallback extends ItemTouchHelper.Callback {
 //                ViewHolderがドラッグされた状態 ＝ actionStateの値が「2」の時、以下の処理を実施
         if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
 //                    ViewHolderが保持するitemView(画面部品)に対し、透過度を「0.5」(半透明)に設定
-            if (viewHolder instanceof MyItemRecyclerViewAdapter.ToBuyItemViewHolder) {
-                MyItemRecyclerViewAdapter.ToBuyItemViewHolder toBuyItemViewHolder = (MyItemRecyclerViewAdapter.ToBuyItemViewHolder) viewHolder;
-                toBuyItemViewHolder.itemView.setAlpha(0.5f);
-                toBuyItemViewHolder.onItemSelected();
+            if (viewHolder instanceof MyItemRecyclerViewAdapter.ItemViewHolder) {
+                MyItemRecyclerViewAdapter.ItemViewHolder itemViewHolder = (MyItemRecyclerViewAdapter.ItemViewHolder) viewHolder;
+                itemViewHolder.itemView.setAlpha(0.5f);
+                itemViewHolder.onItemSelected();
             }
         }
         super.onSelectedChanged(viewHolder, actionState);
@@ -58,10 +58,10 @@ class ItemTouchHelperCallback extends ItemTouchHelper.Callback {
 //                オーバーライド元のメソッドを呼び出し、"ViewHolderがnullとなった時"の処理を実施
         super.clearView(recyclerView, viewHolder);
 //                ViewHolderが保持するitemViewに対し、透過度を「1.0」(不透明)に設定
-        if (viewHolder instanceof MyItemRecyclerViewAdapter.ToBuyItemViewHolder) {
-            MyItemRecyclerViewAdapter.ToBuyItemViewHolder toBuyItemViewHolder = (MyItemRecyclerViewAdapter.ToBuyItemViewHolder) viewHolder;
-            toBuyItemViewHolder.itemView.setAlpha(1.0f);
-            toBuyItemViewHolder.onItemClear();
+        if (viewHolder instanceof MyItemRecyclerViewAdapter.ItemViewHolder) {
+            MyItemRecyclerViewAdapter.ItemViewHolder itemViewHolder = (MyItemRecyclerViewAdapter.ItemViewHolder) viewHolder;
+            itemViewHolder.itemView.setAlpha(1.0f);
+            itemViewHolder.onItemClear();
         }
     }
 

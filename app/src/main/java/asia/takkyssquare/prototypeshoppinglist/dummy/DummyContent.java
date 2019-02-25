@@ -60,10 +60,21 @@ public class DummyContent {
         public final String content;
         public final String details;
 
+        private boolean hasGot;
+
         public DummyItem(String id, String content, String details) {
             this.id = id;
             this.content = content;
             this.details = details;
+            this.hasGot = false;
+        }
+
+        public boolean isHasGot() {
+            return hasGot;
+        }
+
+        public void setHasGot(boolean hasGot) {
+            this.hasGot = hasGot;
         }
 
         @Override

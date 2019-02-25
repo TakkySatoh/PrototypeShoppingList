@@ -31,7 +31,7 @@
             android:layout_marginTop="2dp"
             android:layout_marginBottom="2dp"
             app:layoutManager="LinearLayoutManager"
-            tools:listitem="@layout/fragment_item">
+            tools:listitem="@layout/fragment_item_to_buy">
 
         </android.support.v7.widget.RecyclerView>
 
@@ -52,7 +52,7 @@
             android:layout_marginTop="2dp"
             android:layout_marginBottom="2dp"
             app:layoutManager="LinearLayoutManager"
-            tools:listitem="@layout/fragment_item">
+            tools:listitem="@layout/fragment_item_to_buy">
 
         </android.support.v7.widget.RecyclerView>
 

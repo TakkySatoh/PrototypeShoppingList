@@ -11,5 +11,5 @@ public interface RecyclerViewEditListener {
 
     DummyContent.DummyItem deleteFromRecyclerView(MyItemRecyclerViewAdapter adapter, List<DummyContent.DummyItem> list, DummyContent.DummyItem item);
 
-    void moveItemBetweenRecyclerViews(boolean isChecked, int position);
+    void moveItemBetweenRecyclerViews(boolean hasGot, int position);
 }
