@@ -6,22 +6,14 @@
     android:orientation="horizontal">
 
     <CheckBox
-        android:id="@+id/cbHasGot"
+        android:id="@+id/cbHeadlineHasGot"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/text_margin"
         android:checked="false" />
 
     <TextView
-        android:id="@+id/item_number"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/text_margin"
-        android:layout_weight="0.2"
-        android:textAppearance="?attr/textAppearanceListItem" />
-
-    <TextView
-        android:id="@+id/content"
+        android:id="@+id/tvHeadlineName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/text_margin"
@@ -29,7 +21,7 @@
         android:textAppearance="?attr/textAppearanceListItem" />
 
     <TextView
-        android:id="@+id/amount"
+        android:id="@+id/tvHeadlineAmount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"

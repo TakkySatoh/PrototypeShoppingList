@@ -11,9 +11,9 @@ import static android.support.v7.widget.helper.ItemTouchHelper.DOWN;
  */
 class ItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
-    private MyItemRecyclerViewAdapter mAdapter;
+    private ItemRecyclerViewAdapter mAdapter;
 
-    public ItemTouchHelperCallback(MyItemRecyclerViewAdapter adapter) {
+    public ItemTouchHelperCallback(ItemRecyclerViewAdapter adapter) {
         mAdapter = adapter;
     }
 //          Callbackの抽象メソッド3種をオーバーライド
@@ -43,8 +43,8 @@ class ItemTouchHelperCallback extends ItemTouchHelper.Callback {
 //                ViewHolderがドラッグされた状態 ＝ actionStateの値が「2」の時、以下の処理を実施
         if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
 //                    ViewHolderが保持するitemView(画面部品)に対し、透過度を「0.5」(半透明)に設定
-            if (viewHolder instanceof MyItemRecyclerViewAdapter.ItemViewHolder) {
-                MyItemRecyclerViewAdapter.ItemViewHolder itemViewHolder = (MyItemRecyclerViewAdapter.ItemViewHolder) viewHolder;
+            if (viewHolder instanceof ItemRecyclerViewAdapter.ItemViewHolder) {
+                ItemRecyclerViewAdapter.ItemViewHolder itemViewHolder = (ItemRecyclerViewAdapter.ItemViewHolder) viewHolder;
                 itemViewHolder.itemView.setAlpha(0.5f);
                 itemViewHolder.onItemSelected();
             }
@@ -58,8 +58,8 @@ class ItemTouchHelperCallback extends ItemTouchHelper.Callback {
 //                オーバーライド元のメソッドを呼び出し、"ViewHolderがnullとなった時"の処理を実施
         super.clearView(recyclerView, viewHolder);
 //                ViewHolderが保持するitemViewに対し、透過度を「1.0」(不透明)に設定
-        if (viewHolder instanceof MyItemRecyclerViewAdapter.ItemViewHolder) {
-            MyItemRecyclerViewAdapter.ItemViewHolder itemViewHolder = (MyItemRecyclerViewAdapter.ItemViewHolder) viewHolder;
+        if (viewHolder instanceof ItemRecyclerViewAdapter.ItemViewHolder) {
+            ItemRecyclerViewAdapter.ItemViewHolder itemViewHolder = (ItemRecyclerViewAdapter.ItemViewHolder) viewHolder;
             itemViewHolder.itemView.setAlpha(1.0f);
             itemViewHolder.onItemClear();
         }

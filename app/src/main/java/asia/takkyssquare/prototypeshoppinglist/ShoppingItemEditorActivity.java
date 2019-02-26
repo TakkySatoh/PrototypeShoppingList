@@ -30,7 +30,7 @@ public class ShoppingItemEditorActivity extends AppCompatActivity {
         Intent intent = getIntent();
         int requestCode = (int) intent.getIntExtra("requestCode", 100);
         String itemName = intent.getStringExtra("name");
-        String comment = intent.getStringExtra("details");
+        String comment = intent.getStringExtra("description");
 
         Toolbar toolbar = findViewById(R.id.tbEditor);
         if (intent != null) {
@@ -72,12 +72,12 @@ public class ShoppingItemEditorActivity extends AppCompatActivity {
         mEtPlace.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtPlace, R.string.place));
         mEtComment.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtComment, R.string.comment));
 
-        mCbHasGot = findViewById(R.id.cbHasGot);
+        mCbHasGot = findViewById(R.id.cbHeadlineHasGot);
 
         mBtDelete = findViewById(R.id.btDelete);
         mBtCopyItem = findViewById(R.id.btCopyItem);
         mBtReply = findViewById(R.id.btReply);
-        if (requestCode == MyItemRecyclerViewAdapter.REQUEST_CODE_CREATE) {
+        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE) {
             mBtReply.setText(R.string.reply_create);
         } else {
             mBtReply.setText(R.string.reply_update);

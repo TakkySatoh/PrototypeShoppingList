@@ -4,12 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".ShoppingListFragment">
+    tools:context=".ShoppingListFragment" >
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/rvItemList"
+    <TextView
+        android:id="@+id/tvEmpty"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="@string/empty"
+        android:textSize="18sp" />
 </LinearLayout>
 

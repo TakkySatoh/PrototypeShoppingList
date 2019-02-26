@@ -16,6 +16,7 @@
     <string name="reply_update">内容を更新</string>
     <string name="reply_create">項目を作る</string>
     <string name="hint">%1$sを入力してください</string>
+    <string name="empty">商品が登録されていません</string>
     <string-array name="shopping_list">
         <item name="list1">リスト1</item>
         <item name="list2">リスト2</item>

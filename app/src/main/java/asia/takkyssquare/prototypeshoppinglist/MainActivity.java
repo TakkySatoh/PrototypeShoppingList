@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         ArrayAdapter<CharSequence> spAdapter = ArrayAdapter.createFromResource(this, R.array.shopping_list, android.R.layout.simple_list_item_1);
         spAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
         spinner.setAdapter(spAdapter);
+
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -69,4 +70,17 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         intent.putExtra("details", item.details);
         startActivityForResult(intent, requestCode);
     }
+
+    @Override
+    public void onListFragmentInteraction(ShoppingItemContent.ShoppingItem item, int requestCode) {
+        Intent intent = new Intent(this, ShoppingItemEditorActivity.class);
+        intent.putExtra("requestCode",requestCode);
+        intent.putExtra("name", item.getName());
+        intent.putExtra("description", item.getDescription());
+        startActivityForResult(intent, requestCode);
+
+
+    }
+
+
 }

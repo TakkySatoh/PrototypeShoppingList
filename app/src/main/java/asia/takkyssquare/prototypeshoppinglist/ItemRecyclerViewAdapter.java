@@ -1,5 +1,6 @@
 package asia.takkyssquare.prototypeshoppinglist;
 
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -26,12 +27,13 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     public static final int REQUEST_CODE_CREATE = 100;
     public static final int REQUEST_CODE_UPDATE = 200;
 
-    private static final int VIEW_TYPE_HEADER = 0;
+    private static final int VIEW_TYPE_HEADER = 11;
     private static final int VIEW_TYPE_ITEM_TO_BUY = 1;
     private static final int VIEW_TYPE_ITEM_BOUGHT = 2;
-    private static final int VIEW_TYPE_FOOTER = 3;
+    private static final int VIEW_TYPE_FOOTER = 21;
+    private static final int VIEW_TYPE_EMPTY = 0;
 
-    private final List<DummyItem> mItemList;
+    private final List<ShoppingItemContent.ShoppingItem> mItemList;
     private final boolean mHasGot;
     private final OnListFragmentInteractionListener mListener;
     private final OnStartDragListener mDragStartListener;
@@ -41,13 +43,84 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     private int boughtItemAmount;
 
 
-    public ItemRecyclerViewAdapter(List<DummyItem> items, boolean hasGot, OnListFragmentInteractionListener listener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
+    public enum ViewType {
+        Header(VIEW_TYPE_HEADER, false) {
+            @Override
+            public RecyclerView.ViewHolder createViewHolder(LayoutInflater inflater, ViewGroup viewGroup) {
+                return new HeaderViewHolder(inflater.inflate(R.layout.fragment_item_header, viewGroup, false));
+            }
+
+            @Override
+            public void bindViewHolder(android.support.v7.widget.RecyclerView.ViewHolder holder, int position) {
+
+            }
+        },
+        Footer(VIEW_TYPE_FOOTER, false) {
+            @Override
+            public RecyclerView.ViewHolder createViewHolder(LayoutInflater inflater, ViewGroup viewGroup) {
+                return new FooterViewHolder(inflater.inflate(R.layout.fragment_item_footer, viewGroup, false));
+            }
+
+            @Override
+            public void bindViewHolder(android.support.v7.widget.RecyclerView.ViewHolder holder, int position) {
+
+            }
+        },
+        ItemToBuy(VIEW_TYPE_ITEM_TO_BUY, false) {
+            @Override
+            public RecyclerView.ViewHolder createViewHolder(LayoutInflater inflater, ViewGroup viewGroup) {
+                return new ItemViewHolder(inflater.inflate(R.layout.fragment_item_to_buy, viewGroup, false));
+            }
+
+            @Override
+            public void bindViewHolder(android.support.v7.widget.RecyclerView.ViewHolder holder, int position) {
+
+            }
+        },
+        ItemBought(VIEW_TYPE_ITEM_BOUGHT, true) {
+            @Override
+            public RecyclerView.ViewHolder createViewHolder(LayoutInflater inflater, ViewGroup viewGroup) {
+                return new ItemViewHolder(inflater.inflate(R.layout.fragment_item_bought, viewGroup, false));
+            }
+
+            @Override
+            public void bindViewHolder(RecyclerView.ViewHolder holder, int position) {
+
+            }
+        };
+
+        private int id;
+        private boolean hasGot;
+
+        ViewType(int id, boolean hasGot) {
+            this.id = id;
+            this.hasGot = hasGot;
+        }
+
+        abstract public RecyclerView.ViewHolder createViewHolder(
+                LayoutInflater inflater, ViewGroup viewGroup);
+
+        abstract public void bindViewHolder(RecyclerView.ViewHolder holder, int position);
+
+        public static ViewType getViewType(int viewTypeId) {
+            for (ViewType viewType : ViewType.values()) {
+                if (viewType.id == viewTypeId) {
+                    return viewType;
+                }
+            }
+            return null;
+        }
+
+    }
+
+
+    public ItemRecyclerViewAdapter(List<ShoppingItemContent.ShoppingItem> items, boolean hasGot, OnListFragmentInteractionListener listener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
         mItemList = items;
         mHasGot = hasGot;
         mListener = listener;
         mDragStartListener = dragListener;
         mEditListener = editListener;
-        for (DummyItem item : mItemList) {
+        for (ShoppingItemContent.ShoppingItem item : mItemList) {
             if (!item.isHasGot()) {
                 toBuyItemAmount++;
             } else {
@@ -69,127 +142,182 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
     }
 
-        @Override
-        public RecyclerView.ViewHolder onCreateViewHolder (ViewGroup parent,int viewType){
-            View view;
-            if (!mHasGot) {
-                view = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.fragment_item_to_buy, parent, false);
-            } else {
-                view = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.fragment_item_bought, parent, false);
-            }
-            return (RecyclerView.ViewHolder) new ItemViewHolder(view);
-        }
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        return ViewType.getViewType(getItemViewType(viewType)).createViewHolder(inflater,parent);
+//        View view;
+//        if (!mHasGot) {
+//            view = LayoutInflater.from(parent.getContext())
+//                    .inflate(R.layout.fragment_item_to_buy, parent, false);
+//        } else {
+//            view = LayoutInflater.from(parent.getContext())
+//                    .inflate(R.layout.fragment_item_bought, parent, false);
+//        }
+//        return (RecyclerView.ViewHolder) new ItemViewHolder(view);
+    }
 
-        @Override
-        public void onBindViewHolder ( final RecyclerView.ViewHolder holder, final int position){
-            if (holder instanceof ItemViewHolder) {
-                final ItemViewHolder _holder = (ItemViewHolder) holder;
-                _holder.mItem = mItemList.get(position);
-                _holder.mIdView.setText(mItemList.get(position).id);
-                _holder.mContentView.setText(mItemList.get(position).content);
+    @Override
+    public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
+        if (holder instanceof ItemViewHolder) {
+            final ItemViewHolder _holder = (ItemViewHolder) holder;
+            _holder.mItem = mItemList.get(position);
+            _holder.mTvHeadlineAmount.setText(mItemList.get(position).getAmount());
+            _holder.mTvHeadlineName.setText(mItemList.get(position).getName());
 
-                _holder.mView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (null != mListener) {
-                            // Notify the active callbacks interface (the activity, if the
-                            // fragment is attached to one) that an item has been selected.
-                            mListener.onListFragmentInteraction(_holder.mItem, REQUEST_CODE_UPDATE);
-                        }
+            _holder.mView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (null != mListener) {
+                        // Notify the active callbacks interface (the activity, if the
+                        // fragment is attached to one) that an item has been selected.
+                        mListener.onListFragmentInteraction(_holder.mItem, REQUEST_CODE_UPDATE);
                     }
-                });
+                }
+            });
 
-                _holder.mCbHasGot.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        _holder.mCbHasGot.setChecked(!isChecked);
-                        mEditListener.moveItemBetweenRecyclerViews(mHasGot, position);
+            _holder.mCbHasGot.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    _holder.mCbHasGot.setChecked(!isChecked);
+                    mEditListener.moveItemBetweenRecyclerViews(mHasGot, position);
+                }
+            });
+
+            _holder.mHandle.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                        mDragStartListener.onStartDrag(holder);
                     }
-                });
-
-                _holder.mHandle.setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                            mDragStartListener.onStartDrag(holder);
-                        }
-                        return false;
-                    }
-                });
-
+                    return false;
+                }
+            });
+        } else if (holder instanceof HeaderViewHolder) {
+            final HeaderViewHolder _holder = (HeaderViewHolder) holder;
+            switch (position) {
+                case 0:
+                    _holder.mTvHeader.setText(R.string.title_to_buy);
+                    break;
+                default:
+                    _holder.mTvHeader.setText(R.string.title_bought);
+                    break;
             }
+        } else if (holder instanceof FooterViewHolder){
+            final FooterViewHolder _holder = (FooterViewHolder)holder;
+            _holder.mTvTitle.setText(R.string.title_create);
+        }
+    }
+
+    @Override
+    public int getItemCount() {
+        return mItemList.size();
+    }
+
+    public boolean addItem(ShoppingItemContent.ShoppingItem item) {
+        mItemList.add(0, item);
+        notifyItemInserted(0);
+        notifyDataSetChanged();
+        return true;
+    }
+
+    public ShoppingItemContent.ShoppingItem removeItem(int position) {
+        ShoppingItemContent.ShoppingItem item = mItemList.remove(position);
+        notifyItemRemoved(position);
+        notifyDataSetChanged();
+        return item;
+    }
+
+    @Override
+    public boolean onItemMove(int fromPosition, int toPosition) {
+        Collections.swap(mItemList, fromPosition, toPosition);
+        notifyItemMoved(fromPosition, toPosition);
+        return true;
+    }
+
+    @Override
+    public void onItemDismiss(int position) {
+        mItemList.remove(position);
+        notifyItemRemoved(position);
+    }
+
+
+    public static class ItemViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder {
+
+        public final View mView;
+        public final CheckBox mCbHasGot;
+        public final TextView mTvHeadlineName;
+        public final TextView mTvHeadlineAmount;
+        public final ImageView mHandle;
+        public ShoppingItemContent.ShoppingItem mItem;
+
+        public ItemViewHolder(View view) {
+            super(view);
+            mView = view;
+            mCbHasGot = (CheckBox) view.findViewById(R.id.cbHeadlineHasGot);
+            mTvHeadlineName = (TextView) view.findViewById(R.id.tvHeadlineName);
+            mTvHeadlineAmount = (TextView) view.findViewById(R.id.tvHeadlineAmount);
+            mHandle = (ImageView) view.findViewById(R.id.handle);
         }
 
         @Override
-        public int getItemCount () {
-            return mItemList.size();
-        }
-
-        public boolean addItem (DummyItem item){
-            mItemList.add(0, item);
-            notifyItemInserted(0);
-            notifyDataSetChanged();
-            return true;
-        }
-
-        public DummyItem removeItem ( int position){
-            DummyItem item = mItemList.remove(position);
-            notifyItemRemoved(position);
-            notifyDataSetChanged();
-            return item;
+        public String toString() {
+            return super.toString() + " '" + mTvHeadlineName.getText() + "'";
         }
 
         @Override
-        public boolean onItemMove ( int fromPosition, int toPosition){
-            Collections.swap(mItemList, fromPosition, toPosition);
-            notifyItemMoved(fromPosition, toPosition);
-            return true;
+        public void onItemSelected() {
+            mView.setElevation(16.0f);
         }
 
         @Override
-        public void onItemDismiss ( int position){
-            mItemList.remove(position);
-            notifyItemRemoved(position);
+        public void onItemClear() {
+            mView.setElevation(0.0f);
+
+        }
+    }
+
+    public static class HeaderViewHolder extends RecyclerView.ViewHolder {
+
+        private TextView mTvHeader;
+
+        public HeaderViewHolder(@NonNull View itemView) {
+            super(itemView);
+            mTvHeader = itemView.findViewById(R.id.tvHeader);
         }
 
+        @Override
+        public String toString() {
+            return super.toString() + " '" + mTvHeader.getText() + "'";
+        }
+    }
 
-        public class ItemViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder {
+    public static class FooterViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder {
 
-            public final View mView;
-            public final CheckBox mCbHasGot;
-            public final TextView mIdView;
-            public final TextView mContentView;
-            public final TextView mAmountView;
-            public final ImageView mHandle;
-            public DummyItem mItem;
+        private View mView;
+        private TextView mTvTitle;
 
-            public ItemViewHolder(View view) {
-                super(view);
-                mView = view;
-                mCbHasGot = (CheckBox) view.findViewById(R.id.cbHasGot);
-                mIdView = (TextView) view.findViewById(R.id.item_number);
-                mContentView = (TextView) view.findViewById(R.id.content);
-                mAmountView = (TextView) view.findViewById(R.id.amount);
-                mHandle = (ImageView) view.findViewById(R.id.handle);
-            }
+        public FooterViewHolder(@NonNull View itemView) {
+            super(itemView);
+            mView = itemView;
+            mTvTitle = itemView.findViewById(R.id.tvTitle);
+            mTvTitle.setText(R.string.title_create);
+        }
 
-            @Override
-            public String toString() {
-                return super.toString() + " '" + mContentView.getText() + "'";
-            }
+        @Override
+        public void onItemSelected() {
+            mView.setElevation(16.0f);
+        }
 
-            @Override
-            public void onItemSelected() {
-                mView.setElevation(16.0f);
-            }
+        @Override
+        public void onItemClear() {
+            mView.setElevation(0.0f);
+        }
 
-            @Override
-            public void onItemClear() {
-                mView.setElevation(0.0f);
-
-            }
+        @Override
+        public String toString() {
+            return super.toString() + " '" + mTvTitle.getText() + "'";
         }
 
     }
+}

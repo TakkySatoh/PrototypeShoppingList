@@ -2,14 +2,12 @@ package asia.takkyssquare.prototypeshoppinglist;
 
 import java.util.List;
 
-import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent;
-
 public interface RecyclerViewEditListener {
-    void insertToRecyclerView(MyItemRecyclerViewAdapter adapter, List<DummyContent.DummyItem> list, DummyContent.DummyItem item);
+    void insertToRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItemContent.ShoppingItem> list, ShoppingItemContent.ShoppingItem item);
 
-    void updateToRecyclerView(MyItemRecyclerViewAdapter adapter, List<DummyContent.DummyItem> list, DummyContent.DummyItem item);
+    void updateToRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItemContent.ShoppingItem> list, ShoppingItemContent.ShoppingItem item);
 
-    DummyContent.DummyItem deleteFromRecyclerView(MyItemRecyclerViewAdapter adapter, List<DummyContent.DummyItem> list, DummyContent.DummyItem item);
+    ShoppingItemContent.ShoppingItem deleteFromRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItemContent.ShoppingItem> list, ShoppingItemContent.ShoppingItem item);
 
     void moveItemBetweenRecyclerViews(boolean hasGot, int position);
 }
