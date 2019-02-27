@@ -14,6 +14,7 @@ import android.widget.TextView;
 import java.util.Collections;
 import java.util.List;
 
+import asia.takkyssquare.prototypeshoppinglist.ShoppingItemContent.ShoppingItem;
 import asia.takkyssquare.prototypeshoppinglist.ShoppingListFragment.OnListFragmentInteractionListener;
 import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent.DummyItem;
 
@@ -33,7 +34,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     private static final int VIEW_TYPE_FOOTER = 21;
     private static final int VIEW_TYPE_EMPTY = 0;
 
-    private final List<ShoppingItemContent.ShoppingItem> mItemList;
+    private final List<ShoppingItem> mItemList;
     private final boolean mHasGot;
     private final OnListFragmentInteractionListener mListener;
     private final OnStartDragListener mDragStartListener;
@@ -51,7 +52,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
 
             @Override
-            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItemContent.ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
+            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
                 final HeaderViewHolder _holder = (HeaderViewHolder) holder;
                 switch (position) {
                     case 0:
@@ -70,9 +71,19 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
 
             @Override
-            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItemContent.ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
+            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItem> itemList, final OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
                 final FooterViewHolder _holder = (FooterViewHolder) holder;
                 _holder.mTvTitle.setText(R.string.title_create);
+                _holder.mTvTitle.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (null != mListener) {
+                            // Notify the active callbacks interface (the activity, if the
+                            // fragment is attached to one) that an item has been selected.
+                            mListener.onListFragmentInteraction(null, REQUEST_CODE_CREATE);
+                        }
+                    }
+                });
             }
         },
         ItemToBuy(VIEW_TYPE_ITEM_TO_BUY, false) {
@@ -82,7 +93,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
 
             @Override
-            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItemContent.ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
+            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
                 bindItemViewHolder(holder, position, itemList, mListener, dragListener, editListener);
             }
         },
@@ -93,7 +104,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
 
             @Override
-            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItemContent.ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
+            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
                 bindItemViewHolder(holder, position, itemList, mListener, dragListener, editListener);
             }
         };
@@ -109,7 +120,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         abstract public RecyclerView.ViewHolder createViewHolder(
                 LayoutInflater inflater, ViewGroup viewGroup);
 
-        abstract public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItemContent.ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener);
+        abstract public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener);
 
         public static ViewType getViewType(int viewTypeId) {
             for (ViewType viewType : ViewType.values()) {
@@ -120,7 +131,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             return null;
         }
 
-        public void bindItemViewHolder(final RecyclerView.ViewHolder holder, final int position, List<ShoppingItemContent.ShoppingItem> itemList, final OnListFragmentInteractionListener mListener, final OnStartDragListener dragListener, final RecyclerViewEditListener editListener) {
+        public void bindItemViewHolder(final RecyclerView.ViewHolder holder, final int position, List<ShoppingItem> itemList, final OnListFragmentInteractionListener mListener, final OnStartDragListener dragListener, final RecyclerViewEditListener editListener) {
             final ItemViewHolder _holder = (ItemViewHolder) holder;
             _holder.mItem = itemList.get(position);
             _holder.mTvHeadlineAmount.setText(Integer.toString(itemList.get(position).getAmount()));
@@ -156,17 +167,15 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             });
 
         }
-
     }
 
-
-    public ItemRecyclerViewAdapter(List<ShoppingItemContent.ShoppingItem> items, boolean hasGot, OnListFragmentInteractionListener listener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
+    public ItemRecyclerViewAdapter(List<ShoppingItem> items, boolean hasGot, OnListFragmentInteractionListener listener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
         mItemList = items;
         mHasGot = hasGot;
         mListener = listener;
         mDragStartListener = dragListener;
         mEditListener = editListener;
-        for (ShoppingItemContent.ShoppingItem item : mItemList) {
+        for (ShoppingItem item : mItemList) {
             if (!item.isHasGot()) {
                 toBuyItemAmount++;
             } else {
@@ -180,7 +189,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     @Override
     public int getItemViewType(int position) {
-        ShoppingItemContent.ShoppingItem item = mItemList.get(position);
+        ShoppingItem item = mItemList.get(position);
         if (item.getContentType() == ShoppingItemContent.CONTENT_TYPE_HEADER) {
             return VIEW_TYPE_HEADER;
         } else if (item.getContentType() == ShoppingItemContent.CONTENT_TYPE_FOOTER) {
@@ -210,7 +219,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         return mItemList.size();
     }
 
-    public boolean addItem(ShoppingItemContent.ShoppingItem item, boolean hasGot) {
+    public boolean addItem(ShoppingItem item, boolean hasGot) {
         int position;
         if (!hasGot) {
             position = toBuyItemAmount + 1;
@@ -225,8 +234,8 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         return true;
     }
 
-    public ShoppingItemContent.ShoppingItem removeItem(int position) {
-        ShoppingItemContent.ShoppingItem item = mItemList.remove(position);
+    public ShoppingItem removeItem(int position) {
+        ShoppingItem item = mItemList.remove(position);
         boolean hasGot = item.isHasGot();
         if (!hasGot) {
             toBuyItemAmount--;
@@ -259,7 +268,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         public final TextView mTvHeadlineName;
         public final TextView mTvHeadlineAmount;
         public final ImageView mHandle;
-        public ShoppingItemContent.ShoppingItem mItem;
+        public ShoppingItem mItem;
 
         public ItemViewHolder(View view) {
             super(view);

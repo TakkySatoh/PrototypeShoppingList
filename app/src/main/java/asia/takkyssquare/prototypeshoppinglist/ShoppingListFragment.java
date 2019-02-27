@@ -10,9 +10,11 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.List;
 
+import asia.takkyssquare.prototypeshoppinglist.ShoppingItemContent.ShoppingItem;
 import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent.DummyItem;
 
 /**
@@ -26,6 +28,8 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     private static final int REQUEST_CODE_CREATE = 100;
     private static final int REQUEST_CODE_UPDATE = 200;
 
+    public static final int RESULT_OK = 99;
+
     // TODO: Customize parameter argument names
     private static final String ARG_COLUMN_COUNT = "column-count";
     // TODO: Customize parameters
@@ -34,12 +38,6 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
 
     private ItemRecyclerViewAdapter mRVAdapter;
     private ItemTouchHelper mItemTouchHelper;
-
-//    private MyItemRecyclerViewAdapter mToBuyAdapter;
-//    private MyItemRecyclerViewAdapter mBoughtAdapter;
-//    private ItemTouchHelper mToBuyItemTouchHelper;
-//    private ItemTouchHelper mBoughtItemTouchHelper;
-//    private TextView tvListName;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -159,33 +157,25 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     }
 
     @Override
-    public void insertToRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItemContent.ShoppingItem> list, ShoppingItemContent.ShoppingItem item) {
+    public void insertToRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItem> list, ShoppingItem item) {
 
     }
 
     @Override
-    public void updateToRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItemContent.ShoppingItem> list, ShoppingItemContent.ShoppingItem item) {
+    public void updateToRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItem> list, ShoppingItem item) {
 
     }
 
     @Override
-    public ShoppingItemContent.ShoppingItem deleteFromRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItemContent.ShoppingItem> list, ShoppingItemContent.ShoppingItem item) {
+    public ShoppingItem deleteFromRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItem> list, ShoppingItem item) {
         return null;
     }
 
     //    両RecyclerViewの項目中、チェックボックスの状態遷移に応じて、両リスト間を項目が移動
     public void moveItemBetweenRecyclerViews(boolean hasGot, int position) {
-        ShoppingItemContent.ShoppingItem item = mRVAdapter.removeItem(position);
+        ShoppingItem item = mRVAdapter.removeItem(position);
         item.setHasGot(hasGot);
         mRVAdapter.addItem(item, item.isHasGot());
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_CREATE && resultCode == MainActivity.RESULT_OK) {
-
-        }
     }
 
     /**
@@ -200,7 +190,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
      */
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onListFragmentInteraction(ShoppingItemContent.ShoppingItem item, int requestCode);
+        void onListFragmentInteraction(ShoppingItem item, int requestCode);
     }
 
 }

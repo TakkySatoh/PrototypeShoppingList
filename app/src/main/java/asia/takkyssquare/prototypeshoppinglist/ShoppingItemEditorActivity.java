@@ -5,6 +5,8 @@ import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -27,10 +29,31 @@ public class ShoppingItemEditorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shopping_item_editor);
 
+        int requestCode = 0;
+
+        int amount = 0;
+        int price = 0;
+        boolean hasGot = false;
+        String itemName = null;
+        String place = null;
+        String comment = null;
+        final long createDate;
+        long lastUpdateDate = 0;
+
         Intent intent = getIntent();
-        int requestCode = (int) intent.getIntExtra("requestCode", 100);
-        String itemName = intent.getStringExtra("name");
-        String comment = intent.getStringExtra("description");
+        if (intent != null) {
+            requestCode = intent.getIntExtra("requestCode", 100);
+            hasGot = intent.getBooleanExtra("hasGot", false);
+            itemName = intent.getStringExtra("name");
+            amount = intent.getIntExtra("amount", 0);
+            price = intent.getIntExtra("price", 0);
+            place = intent.getStringExtra("place");
+            comment = intent.getStringExtra("description");
+            createDate = intent.getLongExtra("createDate", System.currentTimeMillis());
+            lastUpdateDate = intent.getLongExtra("lastUpdateDate", System.currentTimeMillis());
+        } else {
+            createDate = System.currentTimeMillis();
+        }
 
         Toolbar toolbar = findViewById(R.id.tbEditor);
         if (intent != null) {
@@ -64,15 +87,25 @@ public class ShoppingItemEditorActivity extends AppCompatActivity {
         if (comment != null) {
             mEtComment.setText(comment);
         }
+        if (place != null) {
+            mEtPlace.setText(place);
+        }
+        mEtItemAmount.setText(String.format("%,d", amount));
+        mEtItemPrice.setText(String.format("%,d", price));
+        mEtItemTotalPrice.setText(String.format("%,d", price * amount));
 
-        mEtItemName.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemName, R.string.item_name));
-        mEtItemAmount.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemAmount, R.string.amount));
-        mEtItemPrice.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemPrice, R.string.price));
-        mEtItemTotalPrice.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemTotalPrice, R.string.total_price));
-        mEtPlace.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtPlace, R.string.place));
-        mEtComment.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtComment, R.string.comment));
+        mEtItemPrice.addTextChangedListener(new TotalPriceWatcher(mEtItemPrice));
+        mEtItemAmount.addTextChangedListener(new TotalPriceWatcher(mEtItemAmount));
+
+//        mEtItemName.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemName, R.string.item_name));
+//        mEtItemAmount.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemAmount, mEtItemPrice, mEtItemTotalPrice));
+//        mEtItemPrice.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemPrice, mEtItemAmount, mEtItemTotalPrice));
+//        mEtItemTotalPrice.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemTotalPrice, R.string.total_price));
+//        mEtPlace.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtPlace, R.string.place));
+//        mEtComment.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtComment, R.string.comment));
 
         mCbHasGot = findViewById(R.id.cbHeadlineHasGot);
+        mCbHasGot.setChecked(hasGot);
 
         mBtDelete = findViewById(R.id.btDelete);
         mBtCopyItem = findViewById(R.id.btCopyItem);
@@ -82,26 +115,73 @@ public class ShoppingItemEditorActivity extends AppCompatActivity {
         } else {
             mBtReply.setText(R.string.reply_update);
         }
+        final int finalRequestCode = requestCode;
+        mBtReply.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent data = new Intent();
+                data.putExtra("requestCode", finalRequestCode);
+                data.putExtra("hasGot", mCbHasGot.isChecked());
+                data.putExtra("name", mEtItemName.getText().toString());
+                data.putExtra("amount", Integer.parseInt(mEtItemAmount.getText().toString()));
+                data.putExtra("price", Integer.parseInt(mEtItemPrice.getText().toString()));
+                data.putExtra("place", mEtPlace.getText().toString());
+                data.putExtra("comment", mEtComment.getText().toString());
+                data.putExtra("createDate", createDate);
+                data.putExtra("lastUpdateDate", System.currentTimeMillis());
+                setResult(MainActivity.RESULT_OK, data);
+                finish();
+            }
+        });
     }
 
+    private String calculateTotalPrice() {
+        String priceStr = mEtItemPrice.getText().toString();
+        if (priceStr == null || priceStr.equals("")) priceStr = "0";
+        String amountStr = mEtItemAmount.getText().toString();
+        if (amountStr == null || amountStr.equals("")) amountStr = "0";
+        return String.format("%,d", Integer.parseInt(priceStr) * Integer.parseInt(amountStr));
+    }
 
-    private class OnEditTextFocusChangeListener implements View.OnFocusChangeListener {
+//    private class OnEditTextFocusChangeListener implements View.OnFocusChangeListener {
+//
+//        private EditText _source1;
+//        private EditText _source2;
+//        private EditText _target;
+//
+//        public OnEditTextFocusChangeListener(EditText source1, EditText source2, EditText target) {
+//            _source1 = source1;
+//            _source2 = source2;
+//            _target = target;
+//        }
+//
+//        @Override
+//        public void onFocusChange(View v, boolean hasFocus) {
+//            if (!hasFocus) {
+//                _target.setText(String.format("%,d", Integer.parseInt(_source1.getText().toString()) * Integer.parseInt(_source2.getText().toString())));
+//            }
+//        }
+//    }
+
+    private class TotalPriceWatcher implements TextWatcher {
 
         private EditText _editText;
-        private int _resID;
 
-        public OnEditTextFocusChangeListener(EditText editText, int resID) {
-            _editText = editText;
-            _resID = resID;
+        public TotalPriceWatcher(EditText editText) {
+            this._editText = editText;
         }
 
         @Override
-        public void onFocusChange(View v, boolean hasFocus) {
-            if (hasFocus) {
-                _editText.setBackgroundColor(Color.LTGRAY);
-            } else {
-                _editText.setBackgroundColor(Color.WHITE);
-            }
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            mEtItemTotalPrice.setText(calculateTotalPrice());
         }
     }
 }

@@ -25,16 +25,25 @@ class ItemTouchHelperCallback extends ItemTouchHelper.Callback {
         return makeMovementFlags(ItemTouchHelper.UP | DOWN, 0);
     }
 
+    @Override
+    public boolean isLongPressDragEnabled() {
+        return false;
+    }
+
     //            ViewHolderがドラッグされた場合の動作
     @Override
-    public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+    public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder source, @NonNull RecyclerView.ViewHolder target) {
+        if (source.getItemViewType() == target.getItemViewType()) {
 //                ViewHolderの移動内容を通知
-        final int fromPosition = viewHolder.getAdapterPosition();
-        final int toPosition = target.getAdapterPosition();
+            final int fromPosition = source.getAdapterPosition();
+            final int toPosition = target.getAdapterPosition();
 //                ViewHolderの要素(Map型インスタンス)をListより取り出し、その要素を削除
 //                削除したインスタンスを一時変数に格納の上、ドロップした箇所に挿入
-        mAdapter.onItemMove(fromPosition, toPosition);
-        return true;
+            mAdapter.onItemMove(fromPosition, toPosition);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     //            ドラッグされている最中のViewHolderの挙動
