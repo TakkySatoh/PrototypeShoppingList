@@ -1,19 +1,39 @@
 package asia.takkyssquare.prototypeshoppinglist;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ShoppingItemContent {
 
-    private List<ShoppingItem> itemList;
+    public static final int CONTENT_TYPE_ITEM = 0;
+    public static final int CONTENT_TYPE_HEADER = 1;
+    public static final int CONTENT_TYPE_FOOTER = 2;
 
-    public List<ShoppingItem> createSampleItemList(int count,String place) {
+    private List<ShoppingItem> itemList = new ArrayList<>();
+
+    public List<ShoppingItem> getItemList() {
+        itemList.add(new ShoppingItem(CONTENT_TYPE_HEADER));
+        itemList.add(new ShoppingItem(CONTENT_TYPE_FOOTER));
+        itemList.add(new ShoppingItem(CONTENT_TYPE_HEADER));
+        return itemList;
+    }
+
+    public List<ShoppingItem> createSampleItemList(int count, String place) {
+        itemList.add(new ShoppingItem(CONTENT_TYPE_HEADER));
         for (int i = 0; i < count; i++) {
             itemList.add(new ShoppingItem("アイテム" + (i + 1), 1, 100, "これはアイテム" + (i + 1) + "です", place, System.currentTimeMillis(), System.currentTimeMillis()));
+            if (i >= count / 2) {
+                itemList.get(i + 1).setHasGot(true);
+            }
         }
+        itemList.add(count / 2 + 1, new ShoppingItem(CONTENT_TYPE_FOOTER));
+        itemList.add(count / 2 + 2, new ShoppingItem(CONTENT_TYPE_HEADER));
         return itemList;
     }
 
     public class ShoppingItem {
+
+        private int contentType;
         private boolean hasGot;
         private String name;
         private int amount;
@@ -24,6 +44,7 @@ public class ShoppingItemContent {
         private long lastUpdateDate;
 
         public ShoppingItem(String name, int amount, int price, String description, String place, long createDate, long lastUpdateDate) {
+            this.contentType = CONTENT_TYPE_ITEM;
             this.hasGot = false;
             this.name = name;
             this.amount = amount;
@@ -32,6 +53,19 @@ public class ShoppingItemContent {
             this.place = place;
             this.createDate = createDate;
             this.lastUpdateDate = lastUpdateDate;
+        }
+
+        public ShoppingItem(int contentType) {
+            this.contentType = contentType;
+            this.createDate = System.currentTimeMillis();
+        }
+
+        public int getContentType() {
+            return contentType;
+        }
+
+        public void setContentType(int contentType) {
+            this.contentType = contentType;
         }
 
         public boolean isHasGot() {

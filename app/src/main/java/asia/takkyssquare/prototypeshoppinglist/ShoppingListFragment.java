@@ -71,54 +71,21 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_shopping_list, container, false);
-
-        // Set the adapter
-//        if (view instanceof RecyclerView) {
-
         Context context = view.getContext();
-
-//        tvListName = view.findViewById(R.id.tvListName);
         Bundle args = getArguments();
-//            String[] listNames = mActivity.getResources().getStringArray(R.array.shopping_list);
-//            int position = args.getInt("position");
         String listName = args.getString("listName");
-//        tvListName.setText(listName);
-//            tvListName.setText(listNames[position]);
+        int position = args.getInt("position");
 
-
-        RecyclerView rvListToBuy = view.findViewById(R.id.rvItemList);
-            rvListToBuy.setLayoutManager(new LinearLayoutManager(context));
-        mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().createSampleItemList(10,listName), false, mListener, this, this);
-        rvListToBuy.setAdapter(mRVAdapter);
-//        }
+        RecyclerView rvItemList = view.findViewById(R.id.rvItemList);
+        rvItemList.setLayoutManager(new LinearLayoutManager(context));
+        if (position == 0) {
+            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().createSampleItemList(10, listName), false, mListener, this, this);
+        } else {
+            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(), false, mListener, this, this);
+        }
+        rvItemList.setAdapter(mRVAdapter);
         mItemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(mRVAdapter));
-        mItemTouchHelper.attachToRecyclerView(rvListToBuy);
-
-//      「購入予定」のアイテムのリストをRecyclerViewとして画面に表示
-//        RecyclerView rvListToBuy = view.findViewById(R.id.rvListToBuy);
-//        if (mColumnCount <= 1) {
-//            rvListToBuy.setLayoutManager(new LinearLayoutManager(context));
-//        } else {
-//            rvListToBuy.setLayoutManager(new GridLayoutManager(context, mColumnCount));
-//        }
-//        mToBuyAdapter = new MyItemRecyclerViewAdapter(DummyContent.toBuyItems, false, mListener, this, this);
-//        rvListToBuy.setAdapter(mToBuyAdapter);
-////        }
-//        mToBuyItemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(mToBuyAdapter));
-//        mToBuyItemTouchHelper.attachToRecyclerView(rvListToBuy);
-
-//        「購入済」のアイテムのリストをRecyclerViewとして画面に表示
-//        (※現時点では項目数0のため、画面表示無し)
-//        RecyclerView rvListBought = view.findViewById(R.id.rvListBought);
-//        if (mColumnCount <= 1) {
-//            rvListBought.setLayoutManager(new LinearLayoutManager(context));
-//        } else {
-//            rvListBought.setLayoutManager(new GridLayoutManager(context, mColumnCount));
-//        }
-//        mBoughtAdapter = new MyItemRecyclerViewAdapter(DummyContent.boughtItems, true, mListener, this, this);
-//        rvListBought.setAdapter(mBoughtAdapter);
-//        mBoughtItemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(mBoughtAdapter));
-//        mBoughtItemTouchHelper.attachToRecyclerView(rvListBought);
+        mItemTouchHelper.attachToRecyclerView(rvItemList);
 
         return view;
     }
@@ -208,15 +175,9 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
 
     //    両RecyclerViewの項目中、チェックボックスの状態遷移に応じて、両リスト間を項目が移動
     public void moveItemBetweenRecyclerViews(boolean hasGot, int position) {
-//        if (!hasGot) {
-//            DummyItem item = mToBuyAdapter.removeItem(position);
-//            item.setHasGot(!item.isHasGot());
-//            mBoughtAdapter.addItem(item);
-//        } else {
-//            DummyItem item = mBoughtAdapter.removeItem(position);
-//            item.setHasGot(!item.isHasGot());
-//            mToBuyAdapter.addItem(item);
-//        }
+        ShoppingItemContent.ShoppingItem item = mRVAdapter.removeItem(position);
+        item.setHasGot(hasGot);
+        mRVAdapter.addItem(item, item.isHasGot());
     }
 
     @Override
@@ -239,7 +200,6 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
      */
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onListFragmentInteraction(DummyItem item, int requestCode);
         void onListFragmentInteraction(ShoppingItemContent.ShoppingItem item, int requestCode);
     }
 

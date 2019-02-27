@@ -51,8 +51,16 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
 
             @Override
-            public void bindViewHolder(android.support.v7.widget.RecyclerView.ViewHolder holder, int position) {
-
+            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItemContent.ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
+                final HeaderViewHolder _holder = (HeaderViewHolder) holder;
+                switch (position) {
+                    case 0:
+                        _holder.mTvHeader.setText(R.string.title_to_buy);
+                        break;
+                    default:
+                        _holder.mTvHeader.setText(R.string.title_bought);
+                        break;
+                }
             }
         },
         Footer(VIEW_TYPE_FOOTER, false) {
@@ -62,8 +70,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
 
             @Override
-            public void bindViewHolder(android.support.v7.widget.RecyclerView.ViewHolder holder, int position) {
-
+            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItemContent.ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
+                final FooterViewHolder _holder = (FooterViewHolder) holder;
+                _holder.mTvTitle.setText(R.string.title_create);
             }
         },
         ItemToBuy(VIEW_TYPE_ITEM_TO_BUY, false) {
@@ -73,8 +82,8 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
 
             @Override
-            public void bindViewHolder(android.support.v7.widget.RecyclerView.ViewHolder holder, int position) {
-
+            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItemContent.ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
+                bindItemViewHolder(holder, position, itemList, mListener, dragListener, editListener);
             }
         },
         ItemBought(VIEW_TYPE_ITEM_BOUGHT, true) {
@@ -84,8 +93,8 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
 
             @Override
-            public void bindViewHolder(RecyclerView.ViewHolder holder, int position) {
-
+            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItemContent.ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
+                bindItemViewHolder(holder, position, itemList, mListener, dragListener, editListener);
             }
         };
 
@@ -100,7 +109,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         abstract public RecyclerView.ViewHolder createViewHolder(
                 LayoutInflater inflater, ViewGroup viewGroup);
 
-        abstract public void bindViewHolder(RecyclerView.ViewHolder holder, int position);
+        abstract public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItemContent.ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener);
 
         public static ViewType getViewType(int viewTypeId) {
             for (ViewType viewType : ViewType.values()) {
@@ -109,6 +118,43 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                 }
             }
             return null;
+        }
+
+        public void bindItemViewHolder(final RecyclerView.ViewHolder holder, final int position, List<ShoppingItemContent.ShoppingItem> itemList, final OnListFragmentInteractionListener mListener, final OnStartDragListener dragListener, final RecyclerViewEditListener editListener) {
+            final ItemViewHolder _holder = (ItemViewHolder) holder;
+            _holder.mItem = itemList.get(position);
+            _holder.mTvHeadlineAmount.setText(Integer.toString(itemList.get(position).getAmount()));
+            _holder.mTvHeadlineName.setText(itemList.get(position).getName());
+
+            _holder.mView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (null != mListener) {
+                        // Notify the active callbacks interface (the activity, if the
+                        // fragment is attached to one) that an item has been selected.
+                        mListener.onListFragmentInteraction(_holder.mItem, REQUEST_CODE_UPDATE);
+                    }
+                }
+            });
+
+            _holder.mCbHasGot.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    _holder.mCbHasGot.setChecked(!isChecked);
+                    editListener.moveItemBetweenRecyclerViews(isChecked, position);
+                }
+            });
+
+            _holder.mHandle.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                        dragListener.onStartDrag(holder);
+                    }
+                    return false;
+                }
+            });
+
         }
 
     }
@@ -126,17 +172,21 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             } else {
                 boughtItemAmount++;
             }
+            if (item.getContentType() != ShoppingItemContent.CONTENT_TYPE_ITEM){
+                toBuyItemAmount--;
+            }
         }
     }
 
     @Override
     public int getItemViewType(int position) {
-        if (position == 0 || position == toBuyItemAmount + 2) {
+        ShoppingItemContent.ShoppingItem item = mItemList.get(position);
+        if (item.getContentType() == ShoppingItemContent.CONTENT_TYPE_HEADER) {
             return VIEW_TYPE_HEADER;
-        } else if (position < toBuyItemAmount + 1) {
-            return VIEW_TYPE_ITEM_TO_BUY;
-        } else if (position == toBuyItemAmount + 1) {
+        } else if (item.getContentType() == ShoppingItemContent.CONTENT_TYPE_FOOTER) {
             return VIEW_TYPE_FOOTER;
+        } else if (item.getContentType() == ShoppingItemContent.CONTENT_TYPE_ITEM && !item.isHasGot()) {
+            return VIEW_TYPE_ITEM_TO_BUY;
         } else {
             return VIEW_TYPE_ITEM_BOUGHT;
         }
@@ -145,67 +195,13 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        return ViewType.getViewType(getItemViewType(viewType)).createViewHolder(inflater,parent);
-//        View view;
-//        if (!mHasGot) {
-//            view = LayoutInflater.from(parent.getContext())
-//                    .inflate(R.layout.fragment_item_to_buy, parent, false);
-//        } else {
-//            view = LayoutInflater.from(parent.getContext())
-//                    .inflate(R.layout.fragment_item_bought, parent, false);
-//        }
-//        return (RecyclerView.ViewHolder) new ItemViewHolder(view);
+        return ViewType.getViewType(viewType).createViewHolder(inflater, parent);
     }
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
-        if (holder instanceof ItemViewHolder) {
-            final ItemViewHolder _holder = (ItemViewHolder) holder;
-            _holder.mItem = mItemList.get(position);
-            _holder.mTvHeadlineAmount.setText(mItemList.get(position).getAmount());
-            _holder.mTvHeadlineName.setText(mItemList.get(position).getName());
-
-            _holder.mView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (null != mListener) {
-                        // Notify the active callbacks interface (the activity, if the
-                        // fragment is attached to one) that an item has been selected.
-                        mListener.onListFragmentInteraction(_holder.mItem, REQUEST_CODE_UPDATE);
-                    }
-                }
-            });
-
-            _holder.mCbHasGot.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    _holder.mCbHasGot.setChecked(!isChecked);
-                    mEditListener.moveItemBetweenRecyclerViews(mHasGot, position);
-                }
-            });
-
-            _holder.mHandle.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                        mDragStartListener.onStartDrag(holder);
-                    }
-                    return false;
-                }
-            });
-        } else if (holder instanceof HeaderViewHolder) {
-            final HeaderViewHolder _holder = (HeaderViewHolder) holder;
-            switch (position) {
-                case 0:
-                    _holder.mTvHeader.setText(R.string.title_to_buy);
-                    break;
-                default:
-                    _holder.mTvHeader.setText(R.string.title_bought);
-                    break;
-            }
-        } else if (holder instanceof FooterViewHolder){
-            final FooterViewHolder _holder = (FooterViewHolder)holder;
-            _holder.mTvTitle.setText(R.string.title_create);
+        if (holder != null) {
+            ViewType.getViewType(holder.getItemViewType()).bindViewHolder(holder, position, mItemList, mListener, mDragStartListener, mEditListener);
         }
     }
 
@@ -214,15 +210,29 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         return mItemList.size();
     }
 
-    public boolean addItem(ShoppingItemContent.ShoppingItem item) {
-        mItemList.add(0, item);
-        notifyItemInserted(0);
+    public boolean addItem(ShoppingItemContent.ShoppingItem item, boolean hasGot) {
+        int position;
+        if (!hasGot) {
+            position = toBuyItemAmount + 1;
+            toBuyItemAmount++;
+        } else {
+            position = toBuyItemAmount + 3;
+            boughtItemAmount++;
+        }
+        mItemList.add(position, item);
+        notifyItemInserted(position);
         notifyDataSetChanged();
         return true;
     }
 
     public ShoppingItemContent.ShoppingItem removeItem(int position) {
         ShoppingItemContent.ShoppingItem item = mItemList.remove(position);
+        boolean hasGot = item.isHasGot();
+        if (!hasGot) {
+            toBuyItemAmount--;
+        } else {
+            boughtItemAmount--;
+        }
         notifyItemRemoved(position);
         notifyDataSetChanged();
         return item;
