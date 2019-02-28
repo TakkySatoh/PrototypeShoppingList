@@ -13,6 +13,10 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 
 public class ShoppingItemEditorActivity extends AppCompatActivity {
+
+    public static final int RESULT_CODE_OK = 0;
+    public static final int RESULT_CODE_DELETE = 99;
+
     private EditText mEtItemName;
     private EditText mEtItemAmount;
     private EditText mEtItemPrice;
@@ -108,6 +112,15 @@ public class ShoppingItemEditorActivity extends AppCompatActivity {
         mCbHasGot.setChecked(hasGot);
 
         mBtDelete = findViewById(R.id.btDelete);
+        mBtDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent data = getIntent();
+                setResult(RESULT_CODE_DELETE,data);
+                finish();
+            }
+        });
+
         mBtCopyItem = findViewById(R.id.btCopyItem);
         mBtReply = findViewById(R.id.btReply);
         if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE) {
@@ -126,10 +139,10 @@ public class ShoppingItemEditorActivity extends AppCompatActivity {
                 data.putExtra("amount", Integer.parseInt(mEtItemAmount.getText().toString()));
                 data.putExtra("price", Integer.parseInt(mEtItemPrice.getText().toString()));
                 data.putExtra("place", mEtPlace.getText().toString());
-                data.putExtra("comment", mEtComment.getText().toString());
+                data.putExtra("description", mEtComment.getText().toString());
                 data.putExtra("createDate", createDate);
                 data.putExtra("lastUpdateDate", System.currentTimeMillis());
-                setResult(MainActivity.RESULT_OK, data);
+                setResult(RESULT_OK, data);
                 finish();
             }
         });

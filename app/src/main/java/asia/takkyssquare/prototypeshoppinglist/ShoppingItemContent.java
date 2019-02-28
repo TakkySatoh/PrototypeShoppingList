@@ -1,5 +1,7 @@
 package asia.takkyssquare.prototypeshoppinglist;
 
+import android.content.Intent;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +31,11 @@ public class ShoppingItemContent {
         itemList.add(count / 2 + 1, new ShoppingItem(CONTENT_TYPE_FOOTER));
         itemList.add(count / 2 + 2, new ShoppingItem(CONTENT_TYPE_HEADER));
         return itemList;
+    }
+
+    public ShoppingItem createItem(Intent data) {
+        ShoppingItem newItem = new ShoppingItem(data.getStringExtra("name"), data.getIntExtra("amount", 0), data.getIntExtra("price", 0), data.getStringExtra("description"), data.getStringExtra("place"), data.getLongExtra("createDate", System.currentTimeMillis()), data.getLongExtra("lastUpdateDate", System.currentTimeMillis()));
+        return newItem;
     }
 
     public class ShoppingItem {

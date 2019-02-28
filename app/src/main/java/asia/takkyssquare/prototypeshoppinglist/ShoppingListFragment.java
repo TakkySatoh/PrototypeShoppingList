@@ -23,7 +23,7 @@ import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent.DummyItem;
  * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
  * interface.
  */
-public class ShoppingListFragment extends Fragment implements OnStartDragListener, RecyclerViewEditListener {
+public class ShoppingListFragment extends Fragment implements OnStartDragListener, RecyclerViewEditListener, ItemRecyclerViewAdapter.OnItemClickListener {
 
     private static final int REQUEST_CODE_CREATE = 100;
     private static final int REQUEST_CODE_UPDATE = 200;
@@ -38,6 +38,8 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
 
     private ItemRecyclerViewAdapter mRVAdapter;
     private ItemTouchHelper mItemTouchHelper;
+
+    private int mPosition;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -81,6 +83,8 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         } else {
             mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(), false, mListener, this, this);
         }
+        mRVAdapter.setOnItemClickListener(this);
+
         rvItemList.setAdapter(mRVAdapter);
         mItemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(mRVAdapter));
         mItemTouchHelper.attachToRecyclerView(rvItemList);
@@ -117,9 +121,23 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
      *
      * @param item
      */
-    public void insertToRecyclerView(ItemRecyclerViewAdapter adapter, List<DummyItem> list, DummyItem item) {
-        list.add(0, item);
-        adapter.notifyItemInserted(0);
+    @Override
+    public void insertToRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItem> list, ShoppingItem item) {
+        int footerPosition = mRVAdapter.getToBuyItemAmount() + 1;
+        if (list != null) {
+            if (-1 != mPosition) {
+                if (item.isHasGot()) {
+                    list.add(footerPosition + 2, item);
+                } else {
+                    if (mPosition == footerPosition) {
+                        list.add(footerPosition, item);
+                    } else {
+                        list.add(mPosition + 1, item);
+                    }
+                    adapter.notifyItemInserted(list.indexOf(item));
+                }
+            }
+        }
     }
 
     /**
@@ -127,13 +145,12 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
      *
      * @param item
      */
-    public void updateToRecyclerView(ItemRecyclerViewAdapter adapter, List<DummyItem> list, DummyItem item) {
-        if (list != null) {
-            int index = list.indexOf(item);
-            if (-1 != index) {
-                adapter.notifyItemChanged(index, item);
-            }
-        }
+    @Override
+    public void updateToRecyclerView(ItemRecyclerViewAdapter
+                                             adapter, List<ShoppingItem> list, ShoppingItem item) {
+        insertToRecyclerView(adapter, list, item);
+        deleteFromRecyclerView(adapter, list, null);
+        adapter.notifyDataSetChanged();
     }
 
     /**
@@ -141,34 +158,28 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
      *
      * @param item
      */
-    public DummyItem deleteFromRecyclerView(ItemRecyclerViewAdapter adapter, List<DummyItem> list, DummyItem item) {
-        DummyItem charge = null;
+    @Override
+    public void deleteFromRecyclerView(ItemRecyclerViewAdapter
+                                               adapter, List<ShoppingItem> list, ShoppingItem item) {
+        int index = 0;
+        boolean isDelete = false;
         if (list != null) {
-            int index = list.indexOf(item);
-            if (-1 != index) {
-                charge = list.remove(index);
-                boolean isDelete = list.remove(item);
-                if (isDelete) {
-                    adapter.notifyItemRemoved(index);
+            if (item != null) {
+                index = list.indexOf(item);
+                if (-1 != index) {
+                    isDelete = list.remove(item);
+                }
+            } else {
+                index = mPosition;
+                ShoppingItem oldItem = list.remove(mPosition);
+                if (!oldItem.equals(list.get(mPosition))) {
+                    isDelete = true;
                 }
             }
+            if (isDelete) {
+                adapter.notifyItemRemoved(index);
+            }
         }
-        return charge;
-    }
-
-    @Override
-    public void insertToRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItem> list, ShoppingItem item) {
-
-    }
-
-    @Override
-    public void updateToRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItem> list, ShoppingItem item) {
-
-    }
-
-    @Override
-    public ShoppingItem deleteFromRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItem> list, ShoppingItem item) {
-        return null;
     }
 
     //    両RecyclerViewの項目中、チェックボックスの状態遷移に応じて、両リスト間を項目が移動
@@ -176,6 +187,54 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         ShoppingItem item = mRVAdapter.removeItem(position);
         item.setHasGot(hasGot);
         mRVAdapter.addItem(item, item.isHasGot());
+    }
+
+    @Override
+    public void onItemClick(ShoppingItem item, int position, int requestCode) {
+        mPosition = position;
+        Intent intent = new Intent(getActivity(), ShoppingItemEditorActivity.class);
+        intent.putExtra("requestCode", requestCode);
+        if (item != null) {
+            intent.putExtra("hasGot", item.isHasGot());
+            intent.putExtra("name", item.getName());
+            intent.putExtra("amount", item.getAmount());
+            intent.putExtra("price", item.getPrice());
+            intent.putExtra("place", item.getPlace());
+            intent.putExtra("description", item.getDescription());
+            intent.putExtra("createDate", item.getCreateDate());
+            intent.putExtra("lastUpdateDate", item.getLastUpdateDate());
+        }
+        startActivityForResult(intent, requestCode);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {
+            if (data != null) {
+                ShoppingItem newItem = new ShoppingItemContent().createItem(data);
+                if(newItem.isHasGot() != data.getBooleanExtra("hasGot",false)){
+                    newItem.setHasGot(data.getBooleanExtra("hasGot",false));
+                }
+                insertToRecyclerView(mRVAdapter, mRVAdapter.getItemList(), newItem);
+                Toast.makeText(getActivity(), data.getStringExtra("name") + "を追加しました", Toast.LENGTH_LONG).show();
+            }
+        } else if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {
+            if (data != null) {
+                ShoppingItem newItem = new ShoppingItemContent().createItem(data);
+                if(newItem.isHasGot() != data.getBooleanExtra("hasGot",false)){
+                    newItem.setHasGot(data.getBooleanExtra("hasGot",false));
+                }
+                updateToRecyclerView(mRVAdapter, mRVAdapter.getItemList(), newItem);
+                Toast.makeText(getActivity(), data.getStringExtra("name") + "を更新しました", Toast.LENGTH_LONG).show();
+            }
+        } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_DELETE) {
+            if (data != null) {
+                ShoppingItem oldItem = new ShoppingItemContent().createItem(data);
+                deleteFromRecyclerView(mRVAdapter, mRVAdapter.getItemList(), oldItem);
+                Toast.makeText(getActivity(), data.getStringExtra("name") + "を削除しました", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     /**

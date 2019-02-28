@@ -34,6 +34,8 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     private static final int VIEW_TYPE_FOOTER = 21;
     private static final int VIEW_TYPE_EMPTY = 0;
 
+    private static ItemRecyclerViewAdapter.OnItemClickListener mClickListener;
+
     private final List<ShoppingItem> mItemList;
     private final boolean mHasGot;
     private final OnListFragmentInteractionListener mListener;
@@ -43,7 +45,10 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     private int toBuyItemAmount;
     private int boughtItemAmount;
 
+    public interface OnItemClickListener {
 
+        void onItemClick(ShoppingItem item, int position, int requestCode);
+    }
     public enum ViewType {
         Header(VIEW_TYPE_HEADER, false) {
             @Override
@@ -71,7 +76,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
 
             @Override
-            public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItem> itemList, final OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
+            public void bindViewHolder(RecyclerView.ViewHolder holder, final int position, List<ShoppingItem> itemList, final OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
                 final FooterViewHolder _holder = (FooterViewHolder) holder;
                 _holder.mTvTitle.setText(R.string.title_create);
                 _holder.mTvTitle.setOnClickListener(new View.OnClickListener() {
@@ -80,7 +85,8 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                         if (null != mListener) {
                             // Notify the active callbacks interface (the activity, if the
                             // fragment is attached to one) that an item has been selected.
-                            mListener.onListFragmentInteraction(null, REQUEST_CODE_CREATE);
+//                            mListener.onListFragmentInteraction(null, REQUEST_CODE_CREATE);
+                            mClickListener.onItemClick(null, position, REQUEST_CODE_CREATE);
                         }
                     }
                 });
@@ -108,15 +114,14 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                 bindItemViewHolder(holder, position, itemList, mListener, dragListener, editListener);
             }
         };
-
         private int id;
+
         private boolean hasGot;
 
         ViewType(int id, boolean hasGot) {
             this.id = id;
             this.hasGot = hasGot;
         }
-
         abstract public RecyclerView.ViewHolder createViewHolder(
                 LayoutInflater inflater, ViewGroup viewGroup);
 
@@ -143,7 +148,8 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                     if (null != mListener) {
                         // Notify the active callbacks interface (the activity, if the
                         // fragment is attached to one) that an item has been selected.
-                        mListener.onListFragmentInteraction(_holder.mItem, REQUEST_CODE_UPDATE);
+//                        mListener.onListFragmentInteraction(_holder.mItem, REQUEST_CODE_UPDATE);
+                        mClickListener.onItemClick(_holder.mItem, position, REQUEST_CODE_UPDATE);
                     }
                 }
             });
@@ -167,8 +173,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             });
 
         }
-    }
 
+
+    }
     public ItemRecyclerViewAdapter(List<ShoppingItem> items, boolean hasGot, OnListFragmentInteractionListener listener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
         mItemList = items;
         mHasGot = hasGot;
@@ -181,10 +188,25 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             } else {
                 boughtItemAmount++;
             }
-            if (item.getContentType() != ShoppingItemContent.CONTENT_TYPE_ITEM){
+            if (item.getContentType() != ShoppingItemContent.CONTENT_TYPE_ITEM) {
                 toBuyItemAmount--;
             }
         }
+    }
+    public void setOnItemClickListener(ItemRecyclerViewAdapter.OnItemClickListener listener) {
+        ItemRecyclerViewAdapter.mClickListener = listener;
+    }
+
+    public List<ShoppingItem> getItemList() {
+        return mItemList;
+    }
+
+    public int getToBuyItemAmount() {
+        return toBuyItemAmount;
+    }
+
+    public int getBoughtItemAmount() {
+        return boughtItemAmount;
     }
 
     @Override

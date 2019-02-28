@@ -66,29 +66,5 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
     @Override
     public void onListFragmentInteraction(ShoppingItem item, int requestCode) {
-        Intent intent = new Intent(this, ShoppingItemEditorActivity.class);
-        intent.putExtra("requestCode", requestCode);
-        if (item != null) {
-            intent.putExtra("hasGot", item.isHasGot());
-            intent.putExtra("name", item.getName());
-            intent.putExtra("amount", item.getAmount());
-            intent.putExtra("price",item.getPrice());
-            intent.putExtra("place",item.getPlace());
-            intent.putExtra("description", item.getDescription());
-            intent.putExtra("createDate",item.getCreateDate());
-            intent.putExtra("lastUpdateDate",item.getLastUpdateDate());
-        }
-        startActivityForResult(intent, requestCode);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE && resultCode == MainActivity.RESULT_OK) {
-
-        } else if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE && resultCode == MainActivity.RESULT_OK) {
-            Toast.makeText(this, data.getStringExtra("name") + "を更新しました", Toast.LENGTH_LONG).show();
-        }
-
     }
 }
