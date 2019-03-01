@@ -186,7 +186,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     public void moveItemBetweenRecyclerViews(boolean hasGot, int position) {
         ShoppingItem item = mRVAdapter.removeItem(position);
         item.setHasGot(hasGot);
-        mRVAdapter.addItem(item, item.isHasGot());
+        mRVAdapter.addItem(item, item.isHasGot(),-1);
     }
 
     @Override
@@ -213,25 +213,28 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {
             if (data != null) {
                 ShoppingItem newItem = new ShoppingItemContent().createItem(data);
-                if(newItem.isHasGot() != data.getBooleanExtra("hasGot",false)){
-                    newItem.setHasGot(data.getBooleanExtra("hasGot",false));
-                }
-                insertToRecyclerView(mRVAdapter, mRVAdapter.getItemList(), newItem);
+                mRVAdapter.addItem(newItem, newItem.isHasGot(),-1);
                 Toast.makeText(getActivity(), data.getStringExtra("name") + "を追加しました", Toast.LENGTH_LONG).show();
             }
         } else if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {
             if (data != null) {
                 ShoppingItem newItem = new ShoppingItemContent().createItem(data);
-                if(newItem.isHasGot() != data.getBooleanExtra("hasGot",false)){
-                    newItem.setHasGot(data.getBooleanExtra("hasGot",false));
+                boolean hasGot;
+                if (mRVAdapter.getItemList().get(mPosition).isHasGot() == newItem.isHasGot()) {
+                    hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(),mPosition+1);
+                } else {
+                    hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(),-1);
                 }
-                updateToRecyclerView(mRVAdapter, mRVAdapter.getItemList(), newItem);
+                if (!hasGot && mPosition > mRVAdapter.getToBuyItemAmount() + 2) {
+                    mRVAdapter.removeItem(mPosition + 1);
+                } else {
+                    mRVAdapter.removeItem(mPosition);
+                }
                 Toast.makeText(getActivity(), data.getStringExtra("name") + "を更新しました", Toast.LENGTH_LONG).show();
             }
         } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_DELETE) {
             if (data != null) {
-                ShoppingItem oldItem = new ShoppingItemContent().createItem(data);
-                deleteFromRecyclerView(mRVAdapter, mRVAdapter.getItemList(), oldItem);
+                mRVAdapter.removeItem(mPosition);
                 Toast.makeText(getActivity(), data.getStringExtra("name") + "を削除しました", Toast.LENGTH_LONG).show();
             }
         }

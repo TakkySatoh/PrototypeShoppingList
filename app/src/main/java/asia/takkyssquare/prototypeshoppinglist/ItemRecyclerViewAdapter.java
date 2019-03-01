@@ -46,9 +46,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     private int boughtItemAmount;
 
     public interface OnItemClickListener {
-
         void onItemClick(ShoppingItem item, int position, int requestCode);
     }
+
     public enum ViewType {
         Header(VIEW_TYPE_HEADER, false) {
             @Override
@@ -122,6 +122,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             this.id = id;
             this.hasGot = hasGot;
         }
+
         abstract public RecyclerView.ViewHolder createViewHolder(
                 LayoutInflater inflater, ViewGroup viewGroup);
 
@@ -173,9 +174,8 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             });
 
         }
-
-
     }
+
     public ItemRecyclerViewAdapter(List<ShoppingItem> items, boolean hasGot, OnListFragmentInteractionListener listener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
         mItemList = items;
         mHasGot = hasGot;
@@ -193,6 +193,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
         }
     }
+
     public void setOnItemClickListener(ItemRecyclerViewAdapter.OnItemClickListener listener) {
         ItemRecyclerViewAdapter.mClickListener = listener;
     }
@@ -241,19 +242,27 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         return mItemList.size();
     }
 
-    public boolean addItem(ShoppingItem item, boolean hasGot) {
-        int position;
+    public boolean addItem(ShoppingItem item, boolean hasGot,int position) {
+//        int position;
         if (!hasGot) {
-            position = toBuyItemAmount + 1;
+            if (position == -1) {
+                position = toBuyItemAmount + 1;
+            }
             toBuyItemAmount++;
         } else {
-            position = toBuyItemAmount + 3;
+            if (position == -1) {
+                position = toBuyItemAmount + 3;
+            }
             boughtItemAmount++;
         }
         mItemList.add(position, item);
         notifyItemInserted(position);
         notifyDataSetChanged();
-        return true;
+        if (hasGot) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public ShoppingItem removeItem(int position) {

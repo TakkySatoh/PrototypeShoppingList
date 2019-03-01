@@ -23,7 +23,7 @@ public class ShoppingItemContent {
     public List<ShoppingItem> createSampleItemList(int count, String place) {
         itemList.add(new ShoppingItem(CONTENT_TYPE_HEADER));
         for (int i = 0; i < count; i++) {
-            itemList.add(new ShoppingItem("アイテム" + (i + 1), 1, 100, "これはアイテム" + (i + 1) + "です", place, System.currentTimeMillis(), System.currentTimeMillis()));
+            itemList.add(new ShoppingItem(false,"アイテム" + (i + 1), 1, 100, "これはアイテム" + (i + 1) + "です", place, System.currentTimeMillis(), System.currentTimeMillis()));
             if (i >= count / 2) {
                 itemList.get(i + 1).setHasGot(true);
             }
@@ -34,7 +34,7 @@ public class ShoppingItemContent {
     }
 
     public ShoppingItem createItem(Intent data) {
-        ShoppingItem newItem = new ShoppingItem(data.getStringExtra("name"), data.getIntExtra("amount", 0), data.getIntExtra("price", 0), data.getStringExtra("description"), data.getStringExtra("place"), data.getLongExtra("createDate", System.currentTimeMillis()), data.getLongExtra("lastUpdateDate", System.currentTimeMillis()));
+        ShoppingItem newItem = new ShoppingItem(data.getBooleanExtra("hasGot",false),data.getStringExtra("name"), data.getIntExtra("amount", 0), data.getIntExtra("price", 0), data.getStringExtra("description"), data.getStringExtra("place"), data.getLongExtra("createDate", System.currentTimeMillis()), data.getLongExtra("lastUpdateDate", System.currentTimeMillis()));
         return newItem;
     }
 
@@ -50,9 +50,9 @@ public class ShoppingItemContent {
         private final long createDate;
         private long lastUpdateDate;
 
-        public ShoppingItem(String name, int amount, int price, String description, String place, long createDate, long lastUpdateDate) {
+        public ShoppingItem(boolean hasGot, String name, int amount, int price, String description, String place, long createDate, long lastUpdateDate) {
             this.contentType = CONTENT_TYPE_ITEM;
-            this.hasGot = false;
+            this.hasGot = hasGot;
             this.name = name;
             this.amount = amount;
             this.price = price;
