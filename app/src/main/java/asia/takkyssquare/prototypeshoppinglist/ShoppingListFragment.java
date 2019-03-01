@@ -186,7 +186,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     public void moveItemBetweenRecyclerViews(boolean hasGot, int position) {
         ShoppingItem item = mRVAdapter.removeItem(position);
         item.setHasGot(hasGot);
-        mRVAdapter.addItem(item, item.isHasGot(),-1);
+        mRVAdapter.addItem(item, item.isHasGot(), -1);
     }
 
     @Override
@@ -213,7 +213,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {
             if (data != null) {
                 ShoppingItem newItem = new ShoppingItemContent().createItem(data);
-                mRVAdapter.addItem(newItem, newItem.isHasGot(),-1);
+                mRVAdapter.addItem(newItem, newItem.isHasGot(), -1);
                 Toast.makeText(getActivity(), data.getStringExtra("name") + "を追加しました", Toast.LENGTH_LONG).show();
             }
         } else if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {
@@ -221,11 +221,11 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                 ShoppingItem newItem = new ShoppingItemContent().createItem(data);
                 boolean hasGot;
                 if (mRVAdapter.getItemList().get(mPosition).isHasGot() == newItem.isHasGot()) {
-                    hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(),mPosition+1);
+                    hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(), mPosition + 1);
                 } else {
-                    hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(),-1);
+                    hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(), -1);
                 }
-                if (!hasGot && mPosition > mRVAdapter.getToBuyItemAmount() + 2) {
+                if (!hasGot && mPosition >= mRVAdapter.getToBuyItemAmount() + 2) {
                     mRVAdapter.removeItem(mPosition + 1);
                 } else {
                     mRVAdapter.removeItem(mPosition);
