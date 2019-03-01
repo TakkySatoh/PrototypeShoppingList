@@ -1,5 +1,7 @@
 package asia.takkyssquare.prototypeshoppinglist;
 
+import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
@@ -11,10 +13,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Toast;
 
-public class ShoppingItemEditorActivity extends AppCompatActivity {
+public class ShoppingItemEditorActivity extends AppCompatActivity implements GeneralDialogFragment.Callback {
 
-    public static final int RESULT_CODE_OK = 0;
+    public static final int RESULT_CODE_COPY = 49;
     public static final int RESULT_CODE_DELETE = 99;
 
     private EditText mEtItemName;
@@ -60,7 +63,7 @@ public class ShoppingItemEditorActivity extends AppCompatActivity {
         }
 
         Toolbar toolbar = findViewById(R.id.tbEditor);
-        if (intent != null) {
+        if (intent.getIntExtra("requestCode", 100) == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
             toolbar.setTitle(R.string.title_update);
         } else {
             toolbar.setTitle(R.string.title_create);
@@ -112,40 +115,26 @@ public class ShoppingItemEditorActivity extends AppCompatActivity {
         mCbHasGot.setChecked(hasGot);
 
         mBtDelete = findViewById(R.id.btDelete);
-        mBtDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent data = getIntent();
-                setResult(RESULT_CODE_DELETE,data);
-                finish();
-            }
-        });
+        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
+            mBtDelete.setOnClickListener(new OnButtonClickListener(this));
+        } else {
+            mBtDelete.setEnabled(false);
+        }
 
         mBtCopyItem = findViewById(R.id.btCopyItem);
+        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
+            mBtCopyItem.setOnClickListener(new OnButtonClickListener(this));
+        } else {
+            mBtCopyItem.setEnabled(false);
+        }
+
         mBtReply = findViewById(R.id.btReply);
         if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE) {
             mBtReply.setText(R.string.reply_create);
         } else {
             mBtReply.setText(R.string.reply_update);
         }
-        final int finalRequestCode = requestCode;
-        mBtReply.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent data = new Intent();
-                data.putExtra("requestCode", finalRequestCode);
-                data.putExtra("hasGot", mCbHasGot.isChecked());
-                data.putExtra("name", mEtItemName.getText().toString());
-                data.putExtra("amount", Integer.parseInt(mEtItemAmount.getText().toString()));
-                data.putExtra("price", Integer.parseInt(mEtItemPrice.getText().toString()));
-                data.putExtra("place", mEtPlace.getText().toString());
-                data.putExtra("description", mEtComment.getText().toString());
-                data.putExtra("createDate", createDate);
-                data.putExtra("lastUpdateDate", System.currentTimeMillis());
-                setResult(RESULT_OK, data);
-                finish();
-            }
-        });
+        mBtReply.setOnClickListener(new OnButtonClickListener(this));
     }
 
     private String calculateTotalPrice() {
@@ -154,6 +143,24 @@ public class ShoppingItemEditorActivity extends AppCompatActivity {
         String amountStr = mEtItemAmount.getText().toString();
         if (amountStr == null || amountStr.equals("")) amountStr = "0";
         return String.format("%,d", Integer.parseInt(priceStr) * Integer.parseInt(amountStr));
+    }
+
+    @Override
+    public void onMyDialogSucceeded(int requestCode, int resultCode, Bundle params) {
+        if (requestCode == RESULT_CODE_DELETE && resultCode == DialogInterface.BUTTON_POSITIVE) {
+            Intent data = getIntent();
+            setResult(RESULT_CODE_DELETE, data);
+            finish();
+        } else if (requestCode == RESULT_CODE_COPY && resultCode == DialogInterface.BUTTON_POSITIVE) {
+            Intent data = new OnButtonClickListener(this).addAndUpdateItem(RESULT_CODE_COPY);
+            setResult(RESULT_CODE_COPY, data);
+            finish();
+        }
+    }
+
+    @Override
+    public void onMyDialogCancelled(int requestCode, Bundle params) {
+
     }
 
 //    private class OnEditTextFocusChangeListener implements View.OnFocusChangeListener {
@@ -195,6 +202,63 @@ public class ShoppingItemEditorActivity extends AppCompatActivity {
         @Override
         public void afterTextChanged(Editable s) {
             mEtItemTotalPrice.setText(calculateTotalPrice());
+        }
+    }
+
+    private class OnButtonClickListener implements View.OnClickListener {
+
+        private ShoppingItemEditorActivity mActivity;
+
+        public OnButtonClickListener(ShoppingItemEditorActivity activity) {
+            mActivity = activity;
+        }
+
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.btReply:
+                    Intent data = addAndUpdateItem(0);
+                    setResult(RESULT_OK, data);
+                    finish();
+                    break;
+                case R.id.btDelete:
+                    Bundle extras = getIntent().getExtras();
+                    new GeneralDialogFragment.Builder(mActivity)
+                            .title(R.string.attention)
+                            .message(extras.getString("name") + getString(R.string.alert_delete))
+                            .requestCode(RESULT_CODE_DELETE)
+                            .positive(R.string.reply_delete)
+                            .negative(R.string.cancel)
+                            .show();
+                    break;
+                case R.id.btCopyItem:
+                    new GeneralDialogFragment.Builder(mActivity)
+                            .title(R.string.attention)
+                            .message(getString(R.string.alert_copy))
+                            .requestCode(RESULT_CODE_COPY)
+                            .positive(R.string.reply_copy)
+                            .negative(R.string.cancel)
+                            .show();
+            }
+        }
+
+        public Intent addAndUpdateItem(int copyCheck) {
+            Intent intent = getIntent();
+            Intent data = new Intent();
+            if (copyCheck == RESULT_CODE_COPY) {
+                data.putExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE);
+            } else {
+                data.putExtra("requestCode", intent.getIntExtra("requestCode", 100));
+            }
+            data.putExtra("hasGot", mCbHasGot.isChecked());
+            data.putExtra("name", mEtItemName.getText().toString());
+            data.putExtra("amount", Integer.parseInt(mEtItemAmount.getText().toString()));
+            data.putExtra("price", Integer.parseInt(mEtItemPrice.getText().toString()));
+            data.putExtra("place", mEtPlace.getText().toString());
+            data.putExtra("description", mEtComment.getText().toString());
+            data.putExtra("createDate", intent.getLongExtra("createDate", System.currentTimeMillis()));
+            data.putExtra("lastUpdateDate", System.currentTimeMillis());
+            return data;
         }
     }
 }

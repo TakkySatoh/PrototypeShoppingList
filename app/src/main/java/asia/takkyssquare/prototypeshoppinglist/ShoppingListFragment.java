@@ -25,11 +25,6 @@ import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent.DummyItem;
  */
 public class ShoppingListFragment extends Fragment implements OnStartDragListener, RecyclerViewEditListener, ItemRecyclerViewAdapter.OnItemClickListener {
 
-    private static final int REQUEST_CODE_CREATE = 100;
-    private static final int REQUEST_CODE_UPDATE = 200;
-
-    public static final int RESULT_OK = 99;
-
     // TODO: Customize parameter argument names
     private static final String ARG_COLUMN_COUNT = "column-count";
     // TODO: Customize parameters
@@ -210,7 +205,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {
+        if ((requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) || resultCode == ShoppingItemEditorActivity.RESULT_CODE_COPY) {
             if (data != null) {
                 ShoppingItem newItem = new ShoppingItemContent().createItem(data);
                 mRVAdapter.addItem(newItem, newItem.isHasGot(), -1);
