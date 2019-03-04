@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">PrototypeShoppingList</string>
+    <string name="option_create_list">リストを新規に作成</string>
+    <string name="option_edit_list">リスト名を変更</string>
+    <string name="option_delete_list">リストを削除</string>
+    <string name="option_share_list">リストを共有</string>
     <string name="title_to_buy">購入予定</string>
     <string name="title_bought">購入済</string>
     <string name="title_update">商品情報を更新</string>
@@ -18,10 +22,13 @@
     <string name="hint">%1$sを入力してください</string>
     <string name="empty">商品が登録されていません</string>
     <string name="attention">確認</string>
+    <string name="alert_create_list">作りたいリスト名を記入してください。</string>
+    <string name="alert_guidance">作りたいリスト名</string>
     <string name="alert_delete">を削除しようとしています。\n削除しても良いですか？</string>
     <string name="alert_copy">記入した内容で新たに商品情報を追加します。\n追加しても良いですか？</string>
     <string name="reply_delete">削除する</string>
     <string name="reply_copy">追加する</string>
+    <string name="reply_create_list">作成する</string>
     <string name="cancel">キャンセル</string>
 
     <string-array name="shopping_list">

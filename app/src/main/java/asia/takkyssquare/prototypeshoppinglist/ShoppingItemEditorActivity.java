@@ -49,7 +49,7 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
 
         Intent intent = getIntent();
         if (intent != null) {
-            requestCode = intent.getIntExtra("requestCode", 100);
+            requestCode = intent.getIntExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE);
             hasGot = intent.getBooleanExtra("hasGot", false);
             itemName = intent.getStringExtra("name");
             amount = intent.getIntExtra("amount", 0);
@@ -63,7 +63,7 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         }
 
         Toolbar toolbar = findViewById(R.id.tbEditor);
-        if (intent.getIntExtra("requestCode", 100) == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
+        if (intent.getIntExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE) == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
             toolbar.setTitle(R.string.title_update);
         } else {
             toolbar.setTitle(R.string.title_create);
@@ -248,7 +248,7 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
             if (copyCheck == RESULT_CODE_COPY) {
                 data.putExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE);
             } else {
-                data.putExtra("requestCode", intent.getIntExtra("requestCode", 100));
+                data.putExtra("requestCode", intent.getIntExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE));
             }
             data.putExtra("hasGot", mCbHasGot.isChecked());
             data.putExtra("name", mEtItemName.getText().toString());

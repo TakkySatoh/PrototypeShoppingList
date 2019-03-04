@@ -13,6 +13,12 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 
+/**
+ * This code is inspired to the following code.
+ * https://qiita.com/kojionilk/items/9584c012679f61569995
+ * Thanks to Hideyuki Kojima (@kojionilk) !
+ */
+
 public class GeneralDialogFragment extends DialogFragment {
 
     /**
@@ -24,8 +30,8 @@ public class GeneralDialogFragment extends DialogFragment {
          * MyDialog で positiveButton, NegativeButton, リスト選択など行われた際に呼ばれる.
          *
          * @param requestCode GeneralDialogFragment 実行時 requestCode
-         * @param resultCode DialogInterface.BUTTON_(POSI|NEGA)TIVE 若しくはリストの position
-         * @param params GeneralDialogFragment に受渡した引数
+         * @param resultCode  DialogInterface.BUTTON_(POSI|NEGA)TIVE 若しくはリストの position
+         * @param params      GeneralDialogFragment に受渡した引数
          */
         void onMyDialogSucceeded(int requestCode, int resultCode, Bundle params);
 
@@ -33,7 +39,7 @@ public class GeneralDialogFragment extends DialogFragment {
          * MyDialog がキャンセルされた時に呼ばれる.
          *
          * @param requestCode GeneralDialogFragment 実行時 requestCode
-         * @param params GeneralDialogFragment に受渡した引数
+         * @param params      GeneralDialogFragment に受渡した引数
          */
         void onMyDialogCancelled(int requestCode, Bundle params);
     }
@@ -43,37 +49,59 @@ public class GeneralDialogFragment extends DialogFragment {
      */
     public static class Builder {
 
-        /** Activity. */
+        /**
+         * Activity.
+         */
         final AppCompatActivity mActivity;
 
-        /** 親 Fragment. */
+        /**
+         * 親 Fragment.
+         */
         final Fragment mParentFragment;
 
-        /** タイトル. */
+        /**
+         * タイトル.
+         */
         String mTitle;
 
-        /** メッセージ. */
+        /**
+         * メッセージ.
+         */
         String mMessage;
 
-        /** 選択リスト. */
+        /**
+         * 選択リスト.
+         */
         String[] mItems;
 
-        /** 肯定ボタン. */
+        /**
+         * 肯定ボタン.
+         */
         String mPositiveLabel;
 
-        /** 否定ボタン. */
+        /**
+         * 否定ボタン.
+         */
         String mNegativeLabel;
 
-        /** リクエストコード. 親 Fragment 側の戻りで受け取る. */
+        /**
+         * リクエストコード. 親 Fragment 側の戻りで受け取る.
+         */
         int mRequestCode = -1;
 
-        /** リスナに受け渡す任意のパラメータ. */
+        /**
+         * リスナに受け渡す任意のパラメータ.
+         */
         Bundle mParams;
 
-        /** DialogFragment のタグ. */
+        /**
+         * DialogFragment のタグ.
+         */
         String mTag = "default";
 
-        /** Dialog をキャンセル可かどうか. */
+        /**
+         * Dialog をキャンセル可かどうか.
+         */
         boolean mCancelable = true;
 
         /**
@@ -274,7 +302,9 @@ public class GeneralDialogFragment extends DialogFragment {
         }
     }
 
-    /** Callback. */
+    /**
+     * Callback.
+     */
     private Callback mCallback;
 
     @Override
@@ -302,8 +332,8 @@ public class GeneralDialogFragment extends DialogFragment {
         final DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                GeneralDialogFragment.this.dismiss();
-                mCallback.onMyDialogSucceeded(GeneralDialogFragment.this.getRequestCode(), which, GeneralDialogFragment.this.getArguments().getBundle("params"));
+                dismiss();
+                mCallback.onMyDialogSucceeded(getRequestCode(), which, getArguments().getBundle("params"));
             }
         };
         final String title = getArguments().getString("title");

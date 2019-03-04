@@ -32,7 +32,6 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     private static final int VIEW_TYPE_ITEM_TO_BUY = 1;
     private static final int VIEW_TYPE_ITEM_BOUGHT = 2;
     private static final int VIEW_TYPE_FOOTER = 21;
-    private static final int VIEW_TYPE_EMPTY = 0;
 
     private static ItemRecyclerViewAdapter.OnItemClickListener mClickListener;
 
@@ -242,8 +241,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         return mItemList.size();
     }
 
-    public boolean addItem(ShoppingItem item, boolean hasGot,int position) {
-//        int position;
+    public boolean addItem(ShoppingItem item, boolean hasGot, int position) {
         if (!hasGot) {
             if (position == -1) {
                 position = toBuyItemAmount + 1;

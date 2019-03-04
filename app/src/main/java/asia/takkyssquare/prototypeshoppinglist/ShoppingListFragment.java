@@ -67,6 +67,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_shopping_list, container, false);
         Context context = view.getContext();
+
         Bundle args = getArguments();
         String listName = args.getString("listName");
         int position = args.getInt("position");
