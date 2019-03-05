@@ -168,7 +168,7 @@ public class GeneralDialogFragment extends DialogFragment {
 
         /**
          * 選択リストを設定する.
-         *
+         * (※選択リストはSingleChoiceItemsとして表示)
          * @param items 選択リスト
          * @return Builder
          */
@@ -350,7 +350,7 @@ public class GeneralDialogFragment extends DialogFragment {
             builder.setMessage(message);
         }
         if (items != null && items.length > 0) {
-            builder.setItems(items, listener);
+            builder.setSingleChoiceItems(items, 0, listener);
         }
         if (!TextUtils.isEmpty(positiveLabel)) {
             builder.setPositiveButton(positiveLabel, listener);

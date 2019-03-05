@@ -24,19 +24,18 @@ import java.util.List;
 
 import asia.takkyssquare.prototypeshoppinglist.ShoppingItemContent.ShoppingItem;
 
-public class MainActivity extends AppCompatActivity implements ShoppingListFragment.OnListFragmentInteractionListener, AdapterView.OnItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements ShoppingListFragment.OnListFragmentInteractionListener, AdapterView.OnItemSelectedListener, GeneralDialogFragment.Callback {
 
     public static final int CREATE_NEW_LIST = 100;
     public static final int DELETE_LIST = 900;
+
+    public static List<String> mListNameList = new ArrayList<>();
 
     private Toolbar mToolbar;
     private Spinner mSpinner;
 
     private ArrayAdapter<String> mSpAdapter;
-    private List<String> mListNameList = new ArrayList<>();
-    private String mCurrentViewingListName;
 
-    //    private String[] mListNameArray;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,8 +52,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 //        mListNameArray = mListNameList.toArray(new String[mListNameList.size()]);
 
         if (savedInstanceState == null) {
-            mCurrentViewingListName = mListNameList.get(0);
-            replaceFragment(mCurrentViewingListName);
+            replaceFragment(mListNameList.get(0));
         }
 
         mSpinner = mToolbar.findViewById(R.id.spListName);
@@ -67,15 +65,23 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, final int position, long id) {
-        if (position != 0) {
-            mCurrentViewingListName = mListNameList.remove(position);
-            mListNameList.add(0, mCurrentViewingListName);
+        String currentViewingListName;
+        if (position == 0) {
+            currentViewingListName = mListNameList.get(0);
+        } else {
+            currentViewingListName = mListNameList.remove(position);
+            mListNameList.add(0, currentViewingListName);
         }
-        replaceFragment(mCurrentViewingListName);
+        replaceFragment(currentViewingListName);
         mSpAdapter.notifyDataSetChanged();
         mSpinner.setOnItemSelectedListener(null);
-        mSpinner.setSelection(0,false);
+        mSpinner.setSelection(0, false);
         mSpinner.setOnItemSelectedListener(this);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
     }
 
     private void replaceFragment(String listName) {
@@ -97,54 +103,118 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
+        int itemId = item.getItemId();
+        switch (itemId) {
             case R.id.opNewList:
-                final EditText etNewListName = new EditText(MainActivity.this);
-                new AlertDialog.Builder(MainActivity.this)
-                        .setTitle(R.string.alert_create_list)
-                        .setView(etNewListName)
-                        .setPositiveButton(R.string.reply_create_list, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                String newListName = etNewListName.getText().toString().trim();
-                                newListName = newListName.replaceAll("　", " ");
-                                if (newListName == null || newListName.isEmpty()) {
-                                    Toast.makeText(getApplicationContext(), R.string.toast_error_empty, Toast.LENGTH_LONG).show();
-                                } else {
-                                    mListNameList.add(0, newListName);
-                                    mSpAdapter.notifyDataSetChanged();
-                                    mSpinner.setSelection(0);
-                                    replaceFragment(newListName);
-                                    String message = getString(R.string.toast_finish_create_list, newListName);
-                                    Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
-                                }
-                            }
-                        })
-                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-
-                            }
-                        })
-                        .show();
+                configureList(itemId);
                 break;
             case R.id.opEditList:
+                configureList(itemId);
                 break;
             case R.id.opDeleteList:
+                String listName = mListNameList.get(0);
+                Bundle params = new Bundle();
+                params.putString("listName", listName);
+                new GeneralDialogFragment.Builder(this)
+                        .title(R.string.attention)
+                        .message("リスト「" + listName + "」" + getString(R.string.alert_delete))
+                        .requestCode(DELETE_LIST)
+                        .params(params)
+                        .positive(R.string.reply_delete)
+                        .negative(R.string.cancel)
+                        .show();
                 break;
             case R.id.opShareList:
+                Toast.makeText(getApplicationContext(),"ご案内: 当機能は未実装につき、ご利用いただけません",Toast.LENGTH_LONG).show();
                 break;
         }
         return true;
     }
 
-    @Override
-    public void onListFragmentInteraction(ShoppingItem item, int requestCode) {
+    public void configureList(final int itemId) {
+        final EditText etNewListName = new EditText(MainActivity.this);
+        String title;
+        String positive;
+        switch (itemId) {
+            case R.id.opNewList:
+                title = getString(R.string.alert_create_list);
+                positive = getString(R.string.reply_create_list);
+                break;
+            case R.id.opEditList:
+                title = getString(R.string.alert_rename_list, mListNameList.get(0));
+                positive = getString(R.string.reply_change);
+                break;
+            default:
+                title = null;
+                positive = null;
+        }
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle(title)
+                .setView(etNewListName)
+                .setPositiveButton(positive, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String newListName = etNewListName.getText().toString().trim();
+                        String message;
+                        newListName = newListName.replaceAll("　", " ");
+                        if (newListName == null || newListName.isEmpty()) {
+                            Toast.makeText(getApplicationContext(), R.string.toast_error_empty, Toast.LENGTH_LONG).show();
+                        } else {
+                            if (itemId == R.id.opNewList) {
+                                mListNameList.add(0, newListName);
+                                mSpAdapter.notifyDataSetChanged();
+                                mSpinner.setSelection(0);
+                                replaceFragment(newListName);
+                                message = getString(R.string.toast_finish_create_list, newListName);
+                            } else {
+                                String oldListName = mListNameList.get(0);
+                                mListNameList.set(0, newListName);
+                                mSpAdapter.notifyDataSetChanged();
+                                message = getString(R.string.toast_finish_rename_list, oldListName, newListName);
+                            }
+                            Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(getApplicationContext(),getString(R.string.toast_cancel),Toast.LENGTH_LONG).show();
+                    }
+                })
+                .show();
     }
 
     @Override
-    public void onNothingSelected(AdapterView<?> parent) {
+    public void onMyDialogSucceeded(int requestCode, int resultCode, Bundle params) {
+        if (requestCode == DELETE_LIST && resultCode == DialogInterface.BUTTON_POSITIVE) {
+            String listName = params.getString("listName");
+            mListNameList.remove(0);
+            mSpAdapter.notifyDataSetChanged();
+            mSpinner.setSelection(0);
+            replaceFragment(mListNameList.get(0));
+            Toast.makeText(getApplicationContext(), getString(R.string.toast_finish_delete_list, listName), Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getApplicationContext(), getString(R.string.toast_cancel), Toast.LENGTH_LONG).show();
+        }
+    }
 
+    @Override
+    public void onMyDialogCancelled(int requestCode, Bundle params) {
+        if (requestCode == DELETE_LIST){
+            Toast.makeText(getApplicationContext(),getString(R.string.toast_cancel),Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onListFragmentInteraction(ShoppingItem item, int requestCode) {
+        new GeneralDialogFragment.Builder(this)
+                .title(R.string.alert_move_to)
+                .items(MainActivity.mListNameList.toArray(new String[MainActivity.mListNameList.size()]))
+                .requestCode(requestCode)
+                .positive(R.string.reply_move)
+                .negative(R.string.cancel)
+                .show();
     }
 
     public static class CustomDialogFragment extends DialogFragment implements DialogInterface.OnClickListener {

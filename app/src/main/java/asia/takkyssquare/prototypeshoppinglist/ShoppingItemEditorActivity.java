@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 public class ShoppingItemEditorActivity extends AppCompatActivity implements GeneralDialogFragment.Callback {
 
+    public static final int RESULT_CODE_MOVE = 29;
     public static final int RESULT_CODE_COPY = 49;
     public static final int RESULT_CODE_DELETE = 99;
 
@@ -29,6 +30,7 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
     private CheckBox mCbHasGot;
     private Button mBtDelete;
     private Button mBtCopyItem;
+    private Button mBtMove;
     private Button mBtReply;
 
     @Override
@@ -128,6 +130,13 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
             mBtCopyItem.setEnabled(false);
         }
 
+        mBtMove = findViewById(R.id.btMove);
+        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
+            mBtMove.setOnClickListener(new OnButtonClickListener(this));
+        } else {
+            mBtMove.setEnabled(false);
+        }
+
         mBtReply = findViewById(R.id.btReply);
         if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE) {
             mBtReply.setText(R.string.reply_create);
@@ -221,6 +230,11 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
                     setResult(RESULT_OK, data);
                     finish();
                     break;
+                case R.id.btMove:
+                    data = addAndUpdateItem(RESULT_CODE_MOVE);
+                    setResult(RESULT_CODE_MOVE, data);
+                    finish();
+                    break;
                 case R.id.btDelete:
                     Bundle extras = getIntent().getExtras();
                     new GeneralDialogFragment.Builder(mActivity)
@@ -245,7 +259,7 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         public Intent addAndUpdateItem(int copyCheck) {
             Intent intent = getIntent();
             Intent data = new Intent();
-            if (copyCheck == RESULT_CODE_COPY) {
+            if (copyCheck == RESULT_CODE_COPY || copyCheck == RESULT_CODE_MOVE) {
                 data.putExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE);
             } else {
                 data.putExtra("requestCode", intent.getIntExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE));

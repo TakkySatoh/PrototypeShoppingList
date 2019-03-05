@@ -23,7 +23,7 @@ import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent.DummyItem;
  * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
  * interface.
  */
-public class ShoppingListFragment extends Fragment implements OnStartDragListener, RecyclerViewEditListener, ItemRecyclerViewAdapter.OnItemClickListener {
+public class ShoppingListFragment extends Fragment implements OnStartDragListener, RecyclerViewEditListener, ItemRecyclerViewAdapter.OnItemClickListener, GeneralDialogFragment.Callback {
 
     // TODO: Customize parameter argument names
     private static final String ARG_COLUMN_COUNT = "column-count";
@@ -232,7 +232,29 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                 mRVAdapter.removeItem(mPosition);
                 Toast.makeText(getActivity(), data.getStringExtra("name") + "を削除しました", Toast.LENGTH_LONG).show();
             }
+        } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_MOVE) {
+            if (data != null) {
+                ShoppingItem newItem = new ShoppingItemContent().createItem(data);
+                mListener.onListFragmentInteraction(newItem,resultCode);
+//                new GeneralDialogFragment.Builder(this)
+//                        .title(R.string.alert_move_to)
+//                        .items(MainActivity.mListNameList.toArray(new String[MainActivity.mListNameList.size()]))
+//                        .requestCode(resultCode)
+//                        .positive(R.string.reply_move)
+//                        .negative(R.string.cancel)
+//                        .show();
+            }
         }
+    }
+
+    @Override
+    public void onMyDialogSucceeded(int requestCode, int resultCode, Bundle params) {
+
+    }
+
+    @Override
+    public void onMyDialogCancelled(int requestCode, Bundle params) {
+
     }
 
     /**
