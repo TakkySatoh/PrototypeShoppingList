@@ -70,11 +70,10 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
 
         Bundle args = getArguments();
         String listName = args.getString("listName");
-        int position = args.getInt("position");
 
         RecyclerView rvItemList = view.findViewById(R.id.rvItemList);
         rvItemList.setLayoutManager(new LinearLayoutManager(context));
-        if (position == 0) {
+        if (listName.equals("リスト1")) {
             mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().createSampleItemList(10, listName), false, mListener, this, this);
         } else {
             mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(), false, mListener, this, this);

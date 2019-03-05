@@ -24,6 +24,8 @@
     <string name="attention">確認</string>
     <string name="alert_create_list">作りたいリスト名を記入してください。</string>
     <string name="alert_guidance">作りたいリスト名</string>
+    <string name="toast_error_empty">エラー: リスト名が入力されていません。\n一文字以上何らかの文字を入力して下さい</string>
+    <string name="toast_finish_create_list">完了: リスト「%1$s」を新規に作成しました</string>
     <string name="alert_delete">を削除しようとしています。\n削除しても良いですか？</string>
     <string name="alert_copy">記入した内容で新たに商品情報を追加します。\n追加しても良いですか？</string>
     <string name="reply_delete">削除する</string>
