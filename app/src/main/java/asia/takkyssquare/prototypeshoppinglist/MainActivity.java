@@ -43,18 +43,25 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
         mToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-
-
+/**
+ * 既存の買物リストの名称一覧を取得
+ * 取得元は現在暫定的にstring.xml内の配列を利用
+ */
         for (String listName : getResources().getStringArray(R.array.shopping_list)) {
             mListNameList.add(listName);
         }
-//        mListNameList.add(getString(R.string.create_list));
-//        mListNameArray = mListNameList.toArray(new String[mListNameList.size()]);
 
+/**
+ * savedInstanceStateがnullの場合、リスト名称一覧の先頭に属する買い物リストを表示
+ * 買い物リストはFragmentとして画面に表示させる
+ */
         if (savedInstanceState == null) {
             replaceFragment(mListNameList.get(0));
         }
-
+/**
+ * 買い物リスト名称一覧をドロップダウンメニューに格納
+ * 詳細な挙動は別メソッドに記述
+ */
         mSpinner = mToolbar.findViewById(R.id.spListName);
         mSpAdapter = new ArrayAdapter<>(this, android.R.layout.simple_selectable_list_item, mListNameList);
         mSpAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
@@ -63,6 +70,15 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         mSpinner.setOnItemSelectedListener(this);
     }
 
+    /**
+     * 買い物リスト名称一覧のドロップメニューの挙動を定義
+     * 任意のリスト名称を選択 → 該当のリスト名をドロップダウンメニューの先頭に移動
+     *    その後、選択したリストを元にFragmentを生成し、画面に表示
+     * @param parent
+     * @param view
+     * @param position
+     * @param id
+     */
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, final int position, long id) {
         String currentViewingListName;
@@ -84,23 +100,38 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
     }
 
+    /**
+     * 買い物リストの内容を表示するFragmentを生成
+     * @param listName :買い物リストの名称。Fragmentインスタンスのタグとして利用
+     */
     private void replaceFragment(String listName) {
         Fragment fragment = new ShoppingListFragment();
         Bundle bundle = new Bundle();
         bundle.putString("listName", listName);
         fragment.setArguments(bundle);
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.content, fragment)
+                .replace(R.id.content, fragment, listName)
                 .addToBackStack(null)
                 .commit();
     }
 
+    /**
+     * オプションメニューのレイアウトを生成
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
     }
 
+    /**
+     * オプションメニュー選択時の挙動を定義。(対象: 名称一覧の先頭のリスト)
+     * 内容:
+     * ・opNewList … 買い物リストの新規作成
+     * ・opEditList … 買い物リストの名称変更
+     * ・opDeleteList … 買い物リストの削除
+     * ・opShareList … 買い物リストを他のユーザと共有
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
@@ -125,12 +156,16 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                         .show();
                 break;
             case R.id.opShareList:
-                Toast.makeText(getApplicationContext(),"ご案内: 当機能は未実装につき、ご利用いただけません",Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "ご案内: 当機能は未実装につき、ご利用いただけません", Toast.LENGTH_LONG).show();
                 break;
         }
         return true;
     }
 
+    /**
+     * 買い物リストの新規生成/名称変更時の名称入力と実行の流れを定義
+     * @param itemId :オプションメニューの位置 (新規生成/名称変更の別を判定)
+     */
     public void configureList(final int itemId) {
         final EditText etNewListName = new EditText(MainActivity.this);
         String title;
@@ -179,12 +214,19 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        Toast.makeText(getApplicationContext(),getString(R.string.toast_cancel),Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), getString(R.string.toast_cancel), Toast.LENGTH_LONG).show();
                     }
                 })
                 .show();
     }
 
+    /**
+     * 買い物リスト削除時の挙動を定義
+     * 削除時のダイアログ(GeneralDialogFragmentインスタンス)より戻ってきた値を利用
+     * @param requestCode :リクエストコード (本クラスの定数を利用)
+     * @param resultCode :リザルトコード (押下されたボタン種別判定のため、DialogInterfaceの定数を利用)
+     * @param params :各種データ格納用のBundle。今回は削除対象のリスト名称を格納
+     */
     @Override
     public void onMyDialogSucceeded(int requestCode, int resultCode, Bundle params) {
         if (requestCode == DELETE_LIST && resultCode == DialogInterface.BUTTON_POSITIVE) {
@@ -199,13 +241,25 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         }
     }
 
+    /**
+     * 買い物リスト削除の取り止め時の挙動を定義
+     * 削除時のダイアログ(GeneralDialogFragmentインスタンス)より戻ってきた値を利用
+     * @param requestCode :リクエストコード (本クラスの定数を利用)
+     * @param params :各種データ格納用のBundle。今回は削除対象のリスト名称を格納
+     */
     @Override
     public void onMyDialogCancelled(int requestCode, Bundle params) {
-        if (requestCode == DELETE_LIST){
-            Toast.makeText(getApplicationContext(),getString(R.string.toast_cancel),Toast.LENGTH_LONG).show();
+        if (requestCode == DELETE_LIST) {
+            Toast.makeText(getApplicationContext(), getString(R.string.toast_cancel), Toast.LENGTH_LONG).show();
         }
     }
 
+    /**
+     * 買い物リストの項目を別のリストへ移動する際のダイアログ表示を記述
+     * (ShoppingListFragmentのリスナに対するイベントハンドラ)
+     * @param item :移動対象の項目を記述したJava Beans
+     * @param requestCode :リクエストコード(呼び出し元の値をそのまま格納)
+     */
     @Override
     public void onListFragmentInteraction(ShoppingItem item, int requestCode) {
         new GeneralDialogFragment.Builder(this)

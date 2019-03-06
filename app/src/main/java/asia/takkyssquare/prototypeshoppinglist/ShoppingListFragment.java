@@ -68,9 +68,17 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         View view = inflater.inflate(R.layout.fragment_shopping_list, container, false);
         Context context = view.getContext();
 
+        /**
+         * Bundleインスタンスを呼び出し元Activityより取得
+         * その後、リスト名のデータを取り出す
+         */
         Bundle args = getArguments();
         String listName = args.getString("listName");
 
+        /**
+         * リストの内容を表示するRecyclerViewを生成
+         * その後、LayoutManager(LinearLayout)、RecyclerView.AdapterのサブクラスをRecyclerViewへ設定
+         */
         RecyclerView rvItemList = view.findViewById(R.id.rvItemList);
         rvItemList.setLayoutManager(new LinearLayoutManager(context));
         if (listName.equals("リスト1")) {
@@ -79,15 +87,22 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
             mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(), false, mListener, this, this);
         }
         mRVAdapter.setOnItemClickListener(this);
-
         rvItemList.setAdapter(mRVAdapter);
+
+        /**
+         * RecyclerViewに対し、ItemTouchHelperを設定
+         * 詳細な挙動は、別途カスタムコールバッククラスにて定義
+         */
         mItemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(mRVAdapter));
         mItemTouchHelper.attachToRecyclerView(rvItemList);
 
         return view;
     }
 
-
+    /**
+     * Fragment再生成時にFragment用コールバックリスナを再度読み込み
+     * コールバックリスナ未設定(該当InterfaceをActivityに実装していない)場合、エラーをスロー
+     */
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -99,13 +114,19 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         }
     }
 
+    /**
+     * Fragment破棄時の挙動を記述
+     * メモリリーク回避のため、コールバックリスナを外す
+     */
     @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
     }
 
-    //    「購入予定」アイテムリストの項目長押し/ハンドル押下時に並び替えアクションを実行
+    /*
+     *「購入予定」アイテムリストの項目長押し/ハンドル押下時に並び替えアクションを実行
+     */
     @Override
     public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
         mItemTouchHelper.startDrag(viewHolder);
@@ -184,6 +205,14 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         mRVAdapter.addItem(item, item.isHasGot(), -1);
     }
 
+    /**
+     * ItemRecyclerViewAdapter.OnItemClickListenerの抽象メソッドの実装
+     * RecyclerViewの項目タップ時の挙動を定義
+     * 受け取った引数を元に、対象アイテムの詳細情報表示・編集用Activityを呼び出す
+     * @param item :対象アイテムの情報を格納するJava Beansのインスタンス
+     * @param position :タップされた位置情報
+     * @param requestCode :リクエストコード
+     */
     @Override
     public void onItemClick(ShoppingItem item, int position, int requestCode) {
         mPosition = position;
@@ -202,6 +231,15 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         startActivityForResult(intent, requestCode);
     }
 
+    /**
+     * 上記Activity呼び出し後の処理を記述
+     * リクエストコードとリザルトコードにより処理分岐
+     * 主な流れ … 引数のIntentインスタンスを元にItemインスタンスを生成
+     *  → アイテム新規生成時はRecyclerViewの「購入予定の末尾」または「購入済の先頭」、
+     *    アイテム情報更新時は該当箇所+1番目にitemを挿入
+     *  → アイテム情報更新時、アイテム削除時は該当箇所のitemをRecyclerViewより削除
+     *  ※アイテムのリスト間移動時は、リスナを通じて処理を親Activityへ委譲する
+     */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

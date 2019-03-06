@@ -38,6 +38,10 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shopping_item_editor);
 
+        /**
+         * Intentインスタンスより受け取るデータを予め宣言
+         * Intentインスタンスのnullチェック後に各種データを取り出す
+         */
         int requestCode = 0;
 
         int amount = 0;
@@ -64,6 +68,10 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
             createDate = System.currentTimeMillis();
         }
 
+        /**
+         * Toolbarを設定
+         * リクエストコードに応じてタイトル設定を変える
+         */
         Toolbar toolbar = findViewById(R.id.tbEditor);
         if (intent.getIntExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE) == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
             toolbar.setTitle(R.string.title_update);
@@ -73,9 +81,15 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         toolbar.setTitleTextColor(Color.WHITE);
         setSupportActionBar(toolbar);
 
+        /**
+         * Toolbarに戻るボタンを表示
+         */
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
 
+        /**
+         * 各EditTextをレイアウトより取得し、ヒントを設定
+         */
         mEtItemName = findViewById(R.id.etItemName);
         mEtItemAmount = findViewById(R.id.etItemAmount);
         mEtItemPrice = findViewById(R.id.etItemPrice);
@@ -90,6 +104,9 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         mEtPlace.setHint(getString(R.string.hint, getString(R.string.place)));
         mEtComment.setHint(getString(R.string.hint, getString(R.string.comment)));
 
+        /**
+         * 「商品名」「説明」「場所」の情報有無確認後、既存データある場合にEditTextへ表示
+         */
         if (itemName != null) {
             mEtItemName.setText(itemName);
         }
@@ -99,10 +116,17 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         if (place != null) {
             mEtPlace.setText(place);
         }
+        /**
+         * 「数量」「単価」の情報をEditTextへ表示。3桁ごとのカンマ区切りを設定
+         * また、「合計金額」を「数量」と「単価」を元に計算の上、同様に表示
+         */
         mEtItemAmount.setText(String.format("%,d", amount));
         mEtItemPrice.setText(String.format("%,d", price));
         mEtItemTotalPrice.setText(String.format("%,d", price * amount));
 
+        /**
+         * 「数量」「単価」のEditTextへTextChangeListenerを設定
+         */
         mEtItemPrice.addTextChangedListener(new TotalPriceWatcher(mEtItemPrice));
         mEtItemAmount.addTextChangedListener(new TotalPriceWatcher(mEtItemAmount));
 
@@ -113,9 +137,16 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
 //        mEtPlace.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtPlace, R.string.place));
 //        mEtComment.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtComment, R.string.comment));
 
+        /**
+         * 「購入済フラグ」のCheckBoxをレイアウトより取得し、Intentの格納内容に応じて設定
+         */
         mCbHasGot = findViewById(R.id.cbHeadlineHasGot);
         mCbHasGot.setChecked(hasGot);
 
+        /**
+         * 「項目を削除」のボタンをレイアウトより取得し、リスナを設定
+         *  ※項目の新規生成時は無効化する
+         */
         mBtDelete = findViewById(R.id.btDelete);
         if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
             mBtDelete.setOnClickListener(new OnButtonClickListener(this));
@@ -123,6 +154,10 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
             mBtDelete.setEnabled(false);
         }
 
+        /**
+         * 「項目をコピー」のボタンをレイアウトより取得し、リスナを設定
+         *  ※項目の新規生成時は無効化する
+         */
         mBtCopyItem = findViewById(R.id.btCopyItem);
         if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
             mBtCopyItem.setOnClickListener(new OnButtonClickListener(this));
@@ -130,6 +165,10 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
             mBtCopyItem.setEnabled(false);
         }
 
+        /**
+         * 「項目を移動」のボタンをレイアウトより取得し、リスナを設定
+         *  ※項目の新規生成時は無効化する
+         */
         mBtMove = findViewById(R.id.btMove);
         if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
             mBtMove.setOnClickListener(new OnButtonClickListener(this));
@@ -137,6 +176,10 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
             mBtMove.setEnabled(false);
         }
 
+        /**
+         * 「項目を作成」「内容を更新」のボタンをレイアウトより取得し、リスナを設定
+         *  ※ボタンへの表示文字列はリクエストコードにより判定
+         */
         mBtReply = findViewById(R.id.btReply);
         if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE) {
             mBtReply.setText(R.string.reply_create);
@@ -146,6 +189,10 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         mBtReply.setOnClickListener(new OnButtonClickListener(this));
     }
 
+    /**
+     * 合計金額の自動計算
+     * 「数量」「単価」欄がいずれも空欄となる場合は、強制的に"0"を入力させるように設定
+     */
     private String calculateTotalPrice() {
         String priceStr = mEtItemPrice.getText().toString();
         if (priceStr == null || priceStr.equals("")) priceStr = "0";
@@ -154,6 +201,13 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         return String.format("%,d", Integer.parseInt(priceStr) * Integer.parseInt(amountStr));
     }
 
+    /**
+     * GeneralDialogFragmentからのコールバックを記述
+     * 項目のコピー時、削除時に利用し、許諾時はsetResult()により、その後の処理を呼び出し元へ引き継ぐ
+     * @param requestCode :リクエストコード
+     * @param resultCode :リザルトコード(ダイアログのボタン種別判定に利用)
+     * @param params :ダイアログ生成時に利用するBundleインスタンス。今回未使用
+     */
     @Override
     public void onMyDialogSucceeded(int requestCode, int resultCode, Bundle params) {
         if (requestCode == RESULT_CODE_DELETE && resultCode == DialogInterface.BUTTON_POSITIVE) {
@@ -192,10 +246,17 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
 //        }
 //    }
 
+    /**
+     * 「数量」「単価」の各EditTextを常時監視するクラス
+     */
     private class TotalPriceWatcher implements TextWatcher {
 
         private EditText _editText;
 
+        /**
+         * コンストラクタ
+         * 自身のEditTextを引数として渡し、フィールドメンバに格納
+         */
         public TotalPriceWatcher(EditText editText) {
             this._editText = editText;
         }
@@ -208,20 +269,40 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         public void onTextChanged(CharSequence s, int start, int before, int count) {
         }
 
+        /**
+         * 入力後の動作を記述
+         * 「合計金額」のEditTextに、ShoppingItemEditorActivity#calculateTotalPrice()の結果を表示
+         */
         @Override
         public void afterTextChanged(Editable s) {
             mEtItemTotalPrice.setText(calculateTotalPrice());
         }
     }
 
+    /**
+     * 画面上の各種ボタンのクリックリスナを定義
+     */
     private class OnButtonClickListener implements View.OnClickListener {
 
         private ShoppingItemEditorActivity mActivity;
 
+        /**
+         * コンストラクタ
+         * イベントハンドラとして利用するGeneralDialogFragmentの呼び出しのため、
+         * GeneralDialogFragment.Callbackを実装したクラスの型として、本クラスそのものをメンバに格納
+         */
         public OnButtonClickListener(ShoppingItemEditorActivity activity) {
             mActivity = activity;
         }
 
+        /**
+         * ボタンの位置により挙動が変化
+         * 画面右端(新規or更新)と項目移動 … 画面部品上の記述内容に基づくIntentを新規生成の上、
+         *   setResult()によりその後の処理を呼び出し元へ移譲
+         * 項目削除とリスト間移動 … 画面部品上の記述内容に基づくBundleを新規生成の上、
+         *   GeneralDialogFragmentにその後の処理を移譲
+         * @param v :各ボタンのスーパークラス
+         */
         @Override
         public void onClick(View v) {
             switch (v.getId()) {
@@ -256,6 +337,11 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
             }
         }
 
+        /**
+         * 項目の新規作成/更新/移動時のsetResult()用Intentを生成
+         * @param copyCheck :リクエストコードの格納内容を判定させるコード
+         * @return data :setResult()の引数に格納するためのIntentインスタンス
+         */
         public Intent addAndUpdateItem(int copyCheck) {
             Intent intent = getIntent();
             Intent data = new Intent();

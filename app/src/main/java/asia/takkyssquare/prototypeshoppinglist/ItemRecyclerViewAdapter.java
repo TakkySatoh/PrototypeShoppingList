@@ -44,11 +44,22 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     private int toBuyItemAmount;
     private int boughtItemAmount;
 
+    /**
+     * リスナ用インターフェイス
+     * RecyclerViewの各項目タップ時の挙動を、RecyclerViewの表示クラスに移譲するために使用
+     */
     public interface OnItemClickListener {
         void onItemClick(ShoppingItem item, int position, int requestCode);
     }
 
+    /**
+     * ビュータイプごとのViewHolderの生成とバインドを定義する列挙型
+     */
     public enum ViewType {
+
+        /**
+         * ヘッダー
+         */
         Header(VIEW_TYPE_HEADER, false) {
             @Override
             public RecyclerView.ViewHolder createViewHolder(LayoutInflater inflater, ViewGroup viewGroup) {
@@ -58,6 +69,10 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             @Override
             public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
                 final HeaderViewHolder _holder = (HeaderViewHolder) holder;
+                /**
+                 * ヘッダーの位置により表示文字列を変化
+                 * 最前列…「購入予定」/それ以外…「購入済」
+                 */
                 switch (position) {
                     case 0:
                         _holder.mTvHeader.setText(R.string.title_to_buy);
@@ -68,6 +83,10 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                 }
             }
         },
+
+        /**
+         * フッター
+         */
         Footer(VIEW_TYPE_FOOTER, false) {
             @Override
             public RecyclerView.ViewHolder createViewHolder(LayoutInflater inflater, ViewGroup viewGroup) {
@@ -77,11 +96,15 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             @Override
             public void bindViewHolder(RecyclerView.ViewHolder holder, final int position, List<ShoppingItem> itemList, final OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
                 final FooterViewHolder _holder = (FooterViewHolder) holder;
+                /**
+                 * 項目タップ時の挙動を定義
+                 * タップ後、アイテムの詳細情報を表示させるため、リスナを実装したクラス(リスト表示用Fragment)へ処理を移譲
+                 */
                 _holder.mTvTitle.setText(R.string.title_create);
                 _holder.mTvTitle.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (null != mListener) {
+                        if (null != mClickListener) {
                             // Notify the active callbacks interface (the activity, if the
                             // fragment is attached to one) that an item has been selected.
 //                            mListener.onListFragmentInteraction(null, REQUEST_CODE_CREATE);
@@ -91,6 +114,10 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                 });
             }
         },
+
+        /**
+         * 購入予定
+         */
         ItemToBuy(VIEW_TYPE_ITEM_TO_BUY, false) {
             @Override
             public RecyclerView.ViewHolder createViewHolder(LayoutInflater inflater, ViewGroup viewGroup) {
@@ -102,6 +129,10 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                 bindItemViewHolder(holder, position, itemList, mListener, dragListener, editListener);
             }
         },
+
+        /**
+         * 購入済
+         */
         ItemBought(VIEW_TYPE_ITEM_BOUGHT, true) {
             @Override
             public RecyclerView.ViewHolder createViewHolder(LayoutInflater inflater, ViewGroup viewGroup) {
@@ -117,6 +148,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
         private boolean hasGot;
 
+        /**
+         * コンストラクタ
+         */
         ViewType(int id, boolean hasGot) {
             this.id = id;
             this.hasGot = hasGot;
@@ -127,6 +161,11 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
         abstract public void bindViewHolder(RecyclerView.ViewHolder holder, int position, List<ShoppingItem> itemList, OnListFragmentInteractionListener mListener, OnStartDragListener dragListener, RecyclerViewEditListener editListener);
 
+        /**
+         * ビュータイプIDに基づき、ViewTypeの各要素を出力するメソッド
+         * @param viewTypeId :ビュータイプのID
+         * @return viewType :列挙型の各要素
+         */
         public static ViewType getViewType(int viewTypeId) {
             for (ViewType viewType : ViewType.values()) {
                 if (viewType.id == viewTypeId) {
@@ -136,12 +175,24 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             return null;
         }
 
+        /**
+         * 「購入予定」「購入済」に共通のビューホルダバインドメソッド
+         * @param holder :各ビューホルダのインスタンス
+         * @param position :タップされた位置情報
+         * @param itemList :アイテム情報の格納リスト
+         * @param mListener :当該インターフェイスを実装したクラス(親Activity)へ処理を引き継がせるためのリスナ
+         * @param dragListener :当該インターフェイスを実装したクラス(リスト表示Fragment)へ処理を引き継がせるためのリスナ
+         * @param editListener :当該インターフェイスを実装したクラス(リスト表示Fragment)へ処理を引き継がせるためのリスナ
+         */
         public void bindItemViewHolder(final RecyclerView.ViewHolder holder, final int position, List<ShoppingItem> itemList, final OnListFragmentInteractionListener mListener, final OnStartDragListener dragListener, final RecyclerViewEditListener editListener) {
             final ItemViewHolder _holder = (ItemViewHolder) holder;
             _holder.mItem = itemList.get(position);
             _holder.mTvHeadlineAmount.setText(Integer.toString(itemList.get(position).getAmount()));
             _holder.mTvHeadlineName.setText(itemList.get(position).getName());
 
+            /**
+             * 項目タップ時の挙動 → リスト表示Fragmentに処理を移譲
+             */
             _holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -154,6 +205,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                 }
             });
 
+            /**
+             * チェックボックスの状態変化時の挙動 → リスト表示フラグメントへ処理を移譲
+             */
             _holder.mCbHasGot.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -162,6 +216,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                 }
             });
 
+            /**
+             * ハンドルアイコンのタップ時の挙動 → リスト表示フラグメントへ処理を移譲
+             */
             _holder.mHandle.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
@@ -175,28 +232,45 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
     }
 
+    /**
+     * コンストラクタ
+     * @param items :各アイテムを格納したリスト
+     * @param hasGot :購入状況判定
+     * @param listener :親Activityへ処理を移譲するためのリスナ
+     * @param dragListener :リスト表示Fragmentへ処理を移譲するためのリスナ
+     * @param editListener :リスト表示Fragmentへ処理を移譲するためのリスナ
+     */
     public ItemRecyclerViewAdapter(List<ShoppingItem> items, boolean hasGot, OnListFragmentInteractionListener listener, OnStartDragListener dragListener, RecyclerViewEditListener editListener) {
         mItemList = items;
         mHasGot = hasGot;
         mListener = listener;
         mDragStartListener = dragListener;
         mEditListener = editListener;
+//        アイテムの購入状況をメンバ変数に計上
         for (ShoppingItem item : mItemList) {
             if (!item.isHasGot()) {
                 toBuyItemAmount++;
             } else {
                 boughtItemAmount++;
             }
+//            アイテムの種別が「アイテム」以外(ヘッダーまたはフッター)の場合、その数量分「購入予定数量」を減少
             if (item.getContentType() != ShoppingItemContent.CONTENT_TYPE_ITEM) {
                 toBuyItemAmount--;
             }
         }
     }
 
+    /**
+     * OnItemClickListenerインスタンスをフィールドメンバへ設定
+     * @param listener :当該リスナを実装したクラス(リスト表示用Fragment)
+     */
     public void setOnItemClickListener(ItemRecyclerViewAdapter.OnItemClickListener listener) {
         ItemRecyclerViewAdapter.mClickListener = listener;
     }
 
+    /**
+     * アイテムリスト/購入予定アイテム数量/購入済アイテム数量のgetter
+     */
     public List<ShoppingItem> getItemList() {
         return mItemList;
     }
@@ -209,6 +283,12 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         return boughtItemAmount;
     }
 
+    /**
+     * ビュータイプ判定
+     * 各アイテムのcontentTypeを呼び出し、その値を元に判定
+     * @param position :リストの位置情報
+     * @return ビュータイプの値 (本クラスの定数を利用)
+     */
     @Override
     public int getItemViewType(int position) {
         ShoppingItem item = mItemList.get(position);
@@ -223,12 +303,20 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
     }
 
+    /**
+     * ビューホルダ生成
+     * 取得したビューホルダの値を元に、処理を列挙型へ移譲
+     */
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         return ViewType.getViewType(viewType).createViewHolder(inflater, parent);
     }
 
+    /**
+     * ビューホルダのバインド
+     * 生成したビューホルダの種別を元に、リストの各位置へビューホルダをバインド
+     */
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
         if (holder != null) {
@@ -236,11 +324,20 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
     }
 
+    /**
+     * RecyclerViewの表示要素数をカウント
+     */
     @Override
     public int getItemCount() {
         return mItemList.size();
     }
 
+    /**
+     * RecyclerViewへのアイテム追加を定義
+     * 追加位置:
+     *   新規かつ購入予定…購入予定行の最後尾 / 新規かつ購入済…購入済み行の先頭
+     *   それ以外…引数で指定された位置
+     */
     public boolean addItem(ShoppingItem item, boolean hasGot, int position) {
         if (!hasGot) {
             if (position == -1) {
@@ -263,6 +360,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
     }
 
+    /**
+     * アイテムの削除を定義
+     */
     public ShoppingItem removeItem(int position) {
         ShoppingItem item = mItemList.remove(position);
         boolean hasGot = item.isHasGot();
@@ -276,6 +376,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         return item;
     }
 
+    /**
+     * アイテムの位置移動を定義
+     */
     @Override
     public boolean onItemMove(int fromPosition, int toPosition) {
         Collections.swap(mItemList, fromPosition, toPosition);
@@ -283,6 +386,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         return true;
     }
 
+    /**
+     * アイテムの削除を定義
+     */
     @Override
     public void onItemDismiss(int position) {
         mItemList.remove(position);
@@ -290,6 +396,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     }
 
 
+    /**
+     * アイテム用ビューホルダ
+     */
     public static class ItemViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder {
 
         public final View mView;
@@ -325,6 +434,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
     }
 
+    /**
+     * ヘッダー用ビューホルダ
+     */
     public static class HeaderViewHolder extends RecyclerView.ViewHolder {
 
         private TextView mTvHeader;
@@ -340,6 +452,9 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
     }
 
+    /**
+     * フッター用ビューホルダ
+     */
     public static class FooterViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder {
 
         private View mView;
