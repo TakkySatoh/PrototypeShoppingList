@@ -2,7 +2,9 @@ package asia.takkyssquare.prototypeshoppinglist;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -30,11 +32,14 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
     public static final int DELETE_LIST = 900;
 
     public static List<String> mListNameList = new ArrayList<>();
+//    public static List<Map<String, Object>> mListNameList = new ArrayList<>();
 
     private Toolbar mToolbar;
     private Spinner mSpinner;
 
     private ArrayAdapter<String> mSpAdapter;
+
+    private int listAmount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,37 +48,39 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
         mToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-/**
- * 既存の買物リストの名称一覧を取得
- * 取得元は現在暫定的にstring.xml内の配列を利用
- */
-        for (String listName : getResources().getStringArray(R.array.shopping_list)) {
-            mListNameList.add(listName);
-        }
 
-/**
- * savedInstanceStateがnullの場合、リスト名称一覧の先頭に属する買い物リストを表示
- * 買い物リストはFragmentとして画面に表示させる
- */
+        /**
+         * 既存の買物リストの名称一覧を取得
+         */
+        DBHelper dbHelper = new DBHelper(getApplicationContext());
+        mListNameList = dbHelper.readListIndex(DBOpenHelper.LIST_ACTIVE);
+        listAmount = dbHelper.getCount(DBOpenHelper.LIST_INDEX);
+        dbHelper.closeDB();
+
+        /**
+         * savedInstanceStateがnullの場合、リスト名称一覧の先頭に属する買い物リストを表示
+         * 買い物リストはFragmentとして画面に表示させる
+         */
         if (savedInstanceState == null) {
             replaceFragment(mListNameList.get(0));
         }
-/**
- * 買い物リスト名称一覧をドロップダウンメニューに格納
- * 詳細な挙動は別メソッドに記述
- */
+
+        /**
+         * 買い物リスト名称一覧をドロップダウンメニューに格納
+         * 詳細な挙動は別メソッドに記述
+         */
         mSpinner = mToolbar.findViewById(R.id.spListName);
         mSpAdapter = new ArrayAdapter<>(this, android.R.layout.simple_selectable_list_item, mListNameList);
         mSpAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
         mSpinner.setAdapter(mSpAdapter);
-
         mSpinner.setOnItemSelectedListener(this);
     }
 
     /**
      * 買い物リスト名称一覧のドロップメニューの挙動を定義
      * 任意のリスト名称を選択 → 該当のリスト名をドロップダウンメニューの先頭に移動
-     *    その後、選択したリストを元にFragmentを生成し、画面に表示
+     * その後、選択したリストを元にFragmentを生成し、画面に表示
+     *
      * @param parent
      * @param view
      * @param position
@@ -81,14 +88,13 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
      */
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, final int position, long id) {
-        String currentViewingListName;
-        if (position == 0) {
-            currentViewingListName = mListNameList.get(0);
-        } else {
-            currentViewingListName = mListNameList.remove(position);
+        if (position != 0) {
+            String currentViewingListName = mListNameList.remove(position);
             mListNameList.add(0, currentViewingListName);
+//            Map<String, Object> list = mListNameList.remove(position);
+//            mListNameList.add(0, list);
         }
-        replaceFragment(currentViewingListName);
+        replaceFragment(mListNameList.get(0));
         mSpAdapter.notifyDataSetChanged();
         mSpinner.setOnItemSelectedListener(null);
         mSpinner.setSelection(0, false);
@@ -102,15 +108,21 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
     /**
      * 買い物リストの内容を表示するFragmentを生成
-     * @param listName :買い物リストの名称。Fragmentインスタンスのタグとして利用
+     *
+     * @param listName :買い物リストのID。Fragmentインスタンスのタグとして利用
      */
     private void replaceFragment(String listName) {
+        DBHelper dbHelper = new DBHelper(getApplicationContext());
+        int listId = dbHelper.getListId(listName);
+        //ここにlistId未取得時のエラー処理を書く
         Fragment fragment = new ShoppingListFragment();
         Bundle bundle = new Bundle();
+        bundle.putInt("listId", listId);
         bundle.putString("listName", listName);
         fragment.setArguments(bundle);
+        dbHelper.closeDB();
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.content, fragment, listName)
+                .replace(R.id.content, fragment, Integer.toString(listId))
                 .addToBackStack(null)
                 .commit();
     }
@@ -164,6 +176,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
     /**
      * 買い物リストの新規生成/名称変更時の名称入力と実行の流れを定義
+     *
      * @param itemId :オプションメニューの位置 (新規生成/名称変更の別を判定)
      */
     public void configureList(final int itemId) {
@@ -192,23 +205,39 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                         String newListName = etNewListName.getText().toString().trim();
                         String message;
                         newListName = newListName.replaceAll("　", " ");
+                        boolean alreadyExists = false;
+                        for (String listName : mListNameList) {
+                            if (listName.equals(newListName)) {
+                                alreadyExists = true;
+                                break;
+                            }
+                        }
                         if (newListName == null || newListName.isEmpty()) {
                             Toast.makeText(getApplicationContext(), R.string.toast_error_empty, Toast.LENGTH_LONG).show();
-                        } else {
-                            if (itemId == R.id.opNewList) {
-                                mListNameList.add(0, newListName);
-                                mSpAdapter.notifyDataSetChanged();
-                                mSpinner.setSelection(0);
-                                replaceFragment(newListName);
-                                message = getString(R.string.toast_finish_create_list, newListName);
-                            } else {
-                                String oldListName = mListNameList.get(0);
-                                mListNameList.set(0, newListName);
-                                mSpAdapter.notifyDataSetChanged();
-                                message = getString(R.string.toast_finish_rename_list, oldListName, newListName);
-                            }
-                            Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+                            return;
+                        } else if (alreadyExists) {
+                            Toast.makeText(getApplicationContext(), R.string.toast_error_duplicate, Toast.LENGTH_LONG).show();
+                            return;
                         }
+                        DBHelper dbHelper = new DBHelper(getApplicationContext());
+                        int currentRowCount = 0;
+                        if (itemId == R.id.opNewList) {
+                            currentRowCount = dbHelper.updateListIndex(null, newListName);
+                            mSpAdapter.insert(newListName, 0);
+                            mSpAdapter.notifyDataSetChanged();
+                            mSpinner.setSelection(0);
+                            replaceFragment(newListName);
+                            message = getString(R.string.toast_finish_create_list, newListName);
+                        } else {
+                            String oldListName = mListNameList.get(0);
+                            currentRowCount = dbHelper.updateListIndex(oldListName, newListName);
+                            mSpAdapter.insert(newListName, 0);
+                            mSpAdapter.notifyDataSetChanged();
+                            message = getString(R.string.toast_finish_rename_list, oldListName, newListName);
+                        }
+                        listAmount = currentRowCount;
+                        dbHelper.closeDB();
+                        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -223,9 +252,10 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
     /**
      * 買い物リスト削除時の挙動を定義
      * 削除時のダイアログ(GeneralDialogFragmentインスタンス)より戻ってきた値を利用
+     *
      * @param requestCode :リクエストコード (本クラスの定数を利用)
-     * @param resultCode :リザルトコード (押下されたボタン種別判定のため、DialogInterfaceの定数を利用)
-     * @param params :各種データ格納用のBundle。今回は削除対象のリスト名称を格納
+     * @param resultCode  :リザルトコード (押下されたボタン種別判定のため、DialogInterfaceの定数を利用)
+     * @param params      :各種データ格納用のBundle。今回は削除対象のリスト名称を格納
      */
     @Override
     public void onMyDialogSucceeded(int requestCode, int resultCode, Bundle params) {
@@ -235,6 +265,9 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
             mSpAdapter.notifyDataSetChanged();
             mSpinner.setSelection(0);
             replaceFragment(mListNameList.get(0));
+            DBHelper dbHelper = new DBHelper(getApplicationContext());
+            dbHelper.moveToDeletedTable(listName, DBOpenHelper.LIST_ACTIVE);
+            dbHelper.closeDB();
             Toast.makeText(getApplicationContext(), getString(R.string.toast_finish_delete_list, listName), Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(getApplicationContext(), getString(R.string.toast_cancel), Toast.LENGTH_LONG).show();
@@ -244,8 +277,9 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
     /**
      * 買い物リスト削除の取り止め時の挙動を定義
      * 削除時のダイアログ(GeneralDialogFragmentインスタンス)より戻ってきた値を利用
+     *
      * @param requestCode :リクエストコード (本クラスの定数を利用)
-     * @param params :各種データ格納用のBundle。今回は削除対象のリスト名称を格納
+     * @param params      :各種データ格納用のBundle。今回は削除対象のリスト名称を格納
      */
     @Override
     public void onMyDialogCancelled(int requestCode, Bundle params) {
@@ -257,7 +291,8 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
     /**
      * 買い物リストの項目を別のリストへ移動する際のダイアログ表示を記述
      * (ShoppingListFragmentのリスナに対するイベントハンドラ)
-     * @param item :移動対象の項目を記述したJava Beans
+     *
+     * @param item        :移動対象の項目を記述したJava Beans
      * @param requestCode :リクエストコード(呼び出し元の値をそのまま格納)
      */
     @Override
@@ -286,5 +321,16 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         public void onClick(DialogInterface dialog, int which) {
 
         }
+    }
+
+    /**
+     * アプリ終了時: 削除済リストテーブルにあるリストを全件削除
+     */
+    @Override
+    protected void onDestroy() {
+        DBHelper dbHelper = new DBHelper(getApplicationContext());
+        dbHelper.deleteDB(DBOpenHelper.LIST_DELETED);
+        dbHelper.closeDB();
+        super.onDestroy();
     }
 }

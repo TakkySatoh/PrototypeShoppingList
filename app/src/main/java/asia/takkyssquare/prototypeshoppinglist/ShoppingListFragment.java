@@ -15,8 +15,6 @@ import android.widget.Toast;
 import java.util.List;
 
 import asia.takkyssquare.prototypeshoppinglist.ShoppingItemContent.ShoppingItem;
-import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent.DummyItem;
-
 /**
  * A fragment representing a list of Items.
  * <p/>
@@ -74,6 +72,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
          */
         Bundle args = getArguments();
         String listName = args.getString("listName");
+        int listId = args.getInt("_id",0);
 
         /**
          * リストの内容を表示するRecyclerViewを生成
@@ -84,7 +83,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         if (listName.equals("リスト1")) {
             mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().createSampleItemList(10, listName), false, mListener, this, this);
         } else {
-            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(), false, mListener, this, this);
+            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(getContext(),listId), false, mListener, this, this);
         }
         mRVAdapter.setOnItemClickListener(this);
         rvItemList.setAdapter(mRVAdapter);

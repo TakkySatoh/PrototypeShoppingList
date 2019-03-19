@@ -28,10 +28,10 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     public static final int REQUEST_CODE_CREATE = 100;
     public static final int REQUEST_CODE_UPDATE = 200;
 
-    private static final int VIEW_TYPE_HEADER = 11;
-    private static final int VIEW_TYPE_ITEM_TO_BUY = 1;
-    private static final int VIEW_TYPE_ITEM_BOUGHT = 2;
-    private static final int VIEW_TYPE_FOOTER = 21;
+    public static final int VIEW_TYPE_HEADER = 11;
+    public static final int VIEW_TYPE_ITEM_TO_BUY = 1;
+    public static final int VIEW_TYPE_ITEM_BOUGHT = 2;
+    public static final int VIEW_TYPE_FOOTER = 21;
 
     private static ItemRecyclerViewAdapter.OnItemClickListener mClickListener;
 
@@ -55,7 +55,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     /**
      * ビュータイプごとのViewHolderの生成とバインドを定義する列挙型
      */
-    public enum ViewType {
+    public enum ViewCategory {
 
         /**
          * ヘッダー
@@ -144,14 +144,19 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                 bindItemViewHolder(holder, position, itemList, mListener, dragListener, editListener);
             }
         };
-        private int id;
 
+        /**
+         * フィールドメンバ
+         * id :ビュータイプ
+         * hasGot :購入状況判定フラグ
+         */
+        private int id;
         private boolean hasGot;
 
         /**
          * コンストラクタ
          */
-        ViewType(int id, boolean hasGot) {
+        ViewCategory(int id, boolean hasGot) {
             this.id = id;
             this.hasGot = hasGot;
         }
@@ -163,13 +168,14 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
         /**
          * ビュータイプIDに基づき、ViewTypeの各要素を出力するメソッド
+         *
          * @param viewTypeId :ビュータイプのID
          * @return viewType :列挙型の各要素
          */
-        public static ViewType getViewType(int viewTypeId) {
-            for (ViewType viewType : ViewType.values()) {
-                if (viewType.id == viewTypeId) {
-                    return viewType;
+        public static ViewCategory getViewType(int viewTypeId) {
+            for (ViewCategory viewCategory : ViewCategory.values()) {
+                if (viewCategory.id == viewTypeId) {
+                    return viewCategory;
                 }
             }
             return null;
@@ -177,10 +183,11 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
         /**
          * 「購入予定」「購入済」に共通のビューホルダバインドメソッド
-         * @param holder :各ビューホルダのインスタンス
-         * @param position :タップされた位置情報
-         * @param itemList :アイテム情報の格納リスト
-         * @param mListener :当該インターフェイスを実装したクラス(親Activity)へ処理を引き継がせるためのリスナ
+         *
+         * @param holder       :各ビューホルダのインスタンス
+         * @param position     :タップされた位置情報
+         * @param itemList     :アイテム情報の格納リスト
+         * @param mListener    :当該インターフェイスを実装したクラス(親Activity)へ処理を引き継がせるためのリスナ
          * @param dragListener :当該インターフェイスを実装したクラス(リスト表示Fragment)へ処理を引き継がせるためのリスナ
          * @param editListener :当該インターフェイスを実装したクラス(リスト表示Fragment)へ処理を引き継がせるためのリスナ
          */
@@ -234,9 +241,10 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     /**
      * コンストラクタ
-     * @param items :各アイテムを格納したリスト
-     * @param hasGot :購入状況判定
-     * @param listener :親Activityへ処理を移譲するためのリスナ
+     *
+     * @param items        :各アイテムを格納したリスト
+     * @param hasGot       :購入状況判定
+     * @param listener     :親Activityへ処理を移譲するためのリスナ
      * @param dragListener :リスト表示Fragmentへ処理を移譲するためのリスナ
      * @param editListener :リスト表示Fragmentへ処理を移譲するためのリスナ
      */
@@ -262,6 +270,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     /**
      * OnItemClickListenerインスタンスをフィールドメンバへ設定
+     *
      * @param listener :当該リスナを実装したクラス(リスト表示用Fragment)
      */
     public void setOnItemClickListener(ItemRecyclerViewAdapter.OnItemClickListener listener) {
@@ -286,6 +295,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     /**
      * ビュータイプ判定
      * 各アイテムのcontentTypeを呼び出し、その値を元に判定
+     *
      * @param position :リストの位置情報
      * @return ビュータイプの値 (本クラスの定数を利用)
      */
@@ -310,7 +320,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        return ViewType.getViewType(viewType).createViewHolder(inflater, parent);
+        return ViewCategory.getViewType(viewType).createViewHolder(inflater, parent);
     }
 
     /**
@@ -320,7 +330,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
         if (holder != null) {
-            ViewType.getViewType(holder.getItemViewType()).bindViewHolder(holder, position, mItemList, mListener, mDragStartListener, mEditListener);
+            ViewCategory.getViewType(holder.getItemViewType()).bindViewHolder(holder, position, mItemList, mListener, mDragStartListener, mEditListener);
         }
     }
 
@@ -335,8 +345,8 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     /**
      * RecyclerViewへのアイテム追加を定義
      * 追加位置:
-     *   新規かつ購入予定…購入予定行の最後尾 / 新規かつ購入済…購入済み行の先頭
-     *   それ以外…引数で指定された位置
+     * 新規かつ購入予定…購入予定行の最後尾 / 新規かつ購入済…購入済み行の先頭
+     * それ以外…引数で指定された位置
      */
     public boolean addItem(ShoppingItem item, boolean hasGot, int position) {
         if (!hasGot) {
