@@ -63,8 +63,6 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_shopping_list, container, false);
-        Context context = view.getContext();
 
         /**
          * Bundleインスタンスを呼び出し元Activityより取得
@@ -74,13 +72,16 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         String listName = args.getString("listName");
         int listId = args.getInt("_id",0);
 
+        View view = inflater.inflate(R.layout.fragment_shopping_list, container, false);
+        Context context = view.getContext();
+
         /**
          * リストの内容を表示するRecyclerViewを生成
          * その後、LayoutManager(LinearLayout)、RecyclerView.AdapterのサブクラスをRecyclerViewへ設定
          */
         RecyclerView rvItemList = view.findViewById(R.id.rvItemList);
         rvItemList.setLayoutManager(new LinearLayoutManager(context));
-        if (listName.equals("リスト1")) {
+        if (listName.equals("サンプル")) {
             mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().createSampleItemList(10, listName), false, mListener, this, this);
         } else {
             mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(getContext(),listId), false, mListener, this, this);

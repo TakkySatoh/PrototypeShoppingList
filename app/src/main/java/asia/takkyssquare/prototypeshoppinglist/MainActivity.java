@@ -12,6 +12,8 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,9 +32,11 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
     public static final int CREATE_NEW_LIST = 100;
     public static final int DELETE_LIST = 900;
+    public static final int FINISH = 999;
+
+    public static final String TAG = "DBHelper";
 
     public static List<String> mListNameList = new ArrayList<>();
-//    public static List<Map<String, Object>> mListNameList = new ArrayList<>();
 
     private Toolbar mToolbar;
     private Spinner mSpinner;
@@ -53,16 +57,17 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
          * 既存の買物リストの名称一覧を取得
          */
         DBHelper dbHelper = new DBHelper(getApplicationContext());
-        mListNameList = dbHelper.readListIndex(DBOpenHelper.LIST_ACTIVE);
-        listAmount = dbHelper.getCount(DBOpenHelper.LIST_INDEX);
-        dbHelper.closeDB();
-
-        /**
-         * savedInstanceStateがnullの場合、リスト名称一覧の先頭に属する買い物リストを表示
-         * 買い物リストはFragmentとして画面に表示させる
-         */
-        if (savedInstanceState == null) {
-            replaceFragment(mListNameList.get(0));
+        try {
+            if (dbHelper.getCount(DBOpenHelper.LIST_DELETED) != 0) {
+                dbHelper.deleteDB(DBOpenHelper.LIST_DELETED);
+            }
+            mListNameList = dbHelper.readListIndex(DBOpenHelper.LIST_ACTIVE);
+            listAmount = dbHelper.getCount(DBOpenHelper.LIST_INDEX);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG, "Error: DBHelper could not get list index or list amount." + e.toString());
+        } finally {
+            dbHelper.closeDB();
         }
 
         /**
@@ -91,8 +96,6 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         if (position != 0) {
             String currentViewingListName = mListNameList.remove(position);
             mListNameList.add(0, currentViewingListName);
-//            Map<String, Object> list = mListNameList.remove(position);
-//            mListNameList.add(0, list);
         }
         replaceFragment(mListNameList.get(0));
         mSpAdapter.notifyDataSetChanged();
@@ -112,17 +115,32 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
      * @param listName :買い物リストのID。Fragmentインスタンスのタグとして利用
      */
     private void replaceFragment(String listName) {
-        DBHelper dbHelper = new DBHelper(getApplicationContext());
-        int listId = dbHelper.getListId(listName);
-        //ここにlistId未取得時のエラー処理を書く
-        Fragment fragment = new ShoppingListFragment();
-        Bundle bundle = new Bundle();
-        bundle.putInt("listId", listId);
-        bundle.putString("listName", listName);
-        fragment.setArguments(bundle);
-        dbHelper.closeDB();
+        Fragment fragment = null;
+        int listId = 0;
+        String tag = null;
+        if (listName.equals(getString(R.string.spinner_empty))) {
+            fragment = new EmptyFragment();
+            tag = "empty";
+        } else {
+            DBHelper dbHelper = new DBHelper(getApplicationContext());
+            try {
+                listId = dbHelper.getListId(listName);
+                //ここにlistId未取得時のエラー処理を書く
+                tag = Integer.toString(listId);
+                fragment = new ShoppingListFragment();
+                Bundle bundle = new Bundle();
+                bundle.putInt("listId", listId);
+                bundle.putString("listName", listName);
+                fragment.setArguments(bundle);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.w(TAG, "Error: DBHelper could not get list_id. " + e.toString());
+            } finally {
+                dbHelper.closeDB();
+            }
+        }
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.content, fragment, Integer.toString(listId))
+                .replace(R.id.content, fragment, tag)
                 .addToBackStack(null)
                 .commit();
     }
@@ -203,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String newListName = etNewListName.getText().toString().trim();
-                        String message;
+                        String message = null;
                         newListName = newListName.replaceAll("　", " ");
                         boolean alreadyExists = false;
                         for (String listName : mListNameList) {
@@ -220,23 +238,32 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                             return;
                         }
                         DBHelper dbHelper = new DBHelper(getApplicationContext());
-                        int currentRowCount = 0;
-                        if (itemId == R.id.opNewList) {
-                            currentRowCount = dbHelper.updateListIndex(null, newListName);
-                            mSpAdapter.insert(newListName, 0);
-                            mSpAdapter.notifyDataSetChanged();
-                            mSpinner.setSelection(0);
-                            replaceFragment(newListName);
-                            message = getString(R.string.toast_finish_create_list, newListName);
-                        } else {
-                            String oldListName = mListNameList.get(0);
-                            currentRowCount = dbHelper.updateListIndex(oldListName, newListName);
-                            mSpAdapter.insert(newListName, 0);
-                            mSpAdapter.notifyDataSetChanged();
-                            message = getString(R.string.toast_finish_rename_list, oldListName, newListName);
+                        int updatedRecordCount = 0;
+                        try {
+                            if (itemId == R.id.opNewList) {
+                                dbHelper.updateListIndex(null, newListName);
+                                mListNameList.add(0, newListName);
+                                if (mListNameList.get(1).equals(getString(R.string.spinner_empty))) {
+                                    mListNameList.remove(1);
+                                }
+                                mSpAdapter.notifyDataSetChanged();
+                                mSpinner.setSelection(0);
+                                replaceFragment(newListName);
+                                message = getString(R.string.toast_finish_create_list, newListName);
+                            } else {
+                                String oldListName = mListNameList.remove(0);
+                                dbHelper.updateListIndex(oldListName, newListName);
+                                mListNameList.add(0, newListName);
+                                mSpAdapter.notifyDataSetChanged();
+                                message = getString(R.string.toast_finish_rename_list, oldListName, newListName);
+                            }
+                            listAmount = dbHelper.getCount(DBOpenHelper.LIST_INDEX);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.w(TAG, "Error: DBHelper could not finish editting table. " + e.toString());
+                        } finally {
+                            dbHelper.closeDB();
                         }
-                        listAmount = currentRowCount;
-                        dbHelper.closeDB();
                         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
                     }
                 })
@@ -262,13 +289,25 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         if (requestCode == DELETE_LIST && resultCode == DialogInterface.BUTTON_POSITIVE) {
             String listName = params.getString("listName");
             mListNameList.remove(0);
+            if (mListNameList.size() == 0) {
+                mListNameList.add(getString(R.string.spinner_empty));
+            }
             mSpAdapter.notifyDataSetChanged();
             mSpinner.setSelection(0);
             replaceFragment(mListNameList.get(0));
             DBHelper dbHelper = new DBHelper(getApplicationContext());
-            dbHelper.moveToDeletedTable(listName, DBOpenHelper.LIST_ACTIVE);
-            dbHelper.closeDB();
+            try {
+                dbHelper.moveToDeletedTable(listName, DBOpenHelper.LIST_ACTIVE);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.w(TAG, "Error: DBHelper could not move the list to deleted table." + e.toString());
+            } finally {
+                dbHelper.closeDB();
+            }
             Toast.makeText(getApplicationContext(), getString(R.string.toast_finish_delete_list, listName), Toast.LENGTH_LONG).show();
+        } else if (requestCode == FINISH && resultCode == DialogInterface.BUTTON_POSITIVE) {
+            onDestroy();
+            finish();
         } else {
             Toast.makeText(getApplicationContext(), getString(R.string.toast_cancel), Toast.LENGTH_LONG).show();
         }
@@ -306,7 +345,45 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                 .show();
     }
 
+    /**
+     * 戻るキー押下時の動作 … アプリ終了の意思確認
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            new GeneralDialogFragment.Builder(this)
+                    .title(R.string.attention)
+                    .message(R.string.alert_finish)
+                    .requestCode(FINISH)
+                    .positive(R.string.reply_finish)
+                    .negative(R.string.cancel)
+                    .show();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * アプリ終了時: 削除済リストテーブルにあるリストを全件削除
+     */
+    @Override
+    protected void onDestroy() {
+        DBHelper dbHelper = new DBHelper(getApplicationContext());
+        try {
+            int deletedTableAmount = dbHelper.deleteDB(DBOpenHelper.LIST_DELETED);
+            Log.d(TAG, "Completed: DBHelper cleaned " + DBOpenHelper.ITEM_DELETED + " table with " + deletedTableAmount + " lists!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG, "Error: DBHelper could not delete elements of deleted table." + e.toString());
+        } finally {
+            dbHelper.closeDB();
+        }
+        super.onDestroy();
+    }
+
     public static class CustomDialogFragment extends DialogFragment implements DialogInterface.OnClickListener {
+
 
         @NonNull
         @Override
@@ -321,16 +398,6 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         public void onClick(DialogInterface dialog, int which) {
 
         }
-    }
 
-    /**
-     * アプリ終了時: 削除済リストテーブルにあるリストを全件削除
-     */
-    @Override
-    protected void onDestroy() {
-        DBHelper dbHelper = new DBHelper(getApplicationContext());
-        dbHelper.deleteDB(DBOpenHelper.LIST_DELETED);
-        dbHelper.closeDB();
-        super.onDestroy();
     }
 }

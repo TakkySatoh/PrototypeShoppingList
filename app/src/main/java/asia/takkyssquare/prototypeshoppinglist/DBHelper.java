@@ -32,20 +32,25 @@ public class DBHelper extends ContextWrapper {
         mySQLiteDatabase = null;
     }
 
-    //買い物リスト読込
+    //買い物リスト一覧読込
+    //買い物リスト一覧が空白の場合 → 固定メッセージをListに格納
     public List<String> readListIndex(String tableName) {
         List<String> listIndex = new ArrayList<>();
-        Cursor cursor = mySQLiteDatabase.query
-                (tableName, null, null, null, null, null, "update_at desc", null);
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                String listName = cursor.getString(cursor.getColumnIndex("name"));
-                listIndex.add(listName);
-            } while (cursor.moveToNext());
-        } else {
-            listIndex.add(getString(R.string.spinner_empty));
+        try (Cursor cursor = mySQLiteDatabase.query
+                (tableName, null, null, null, null, null, "update_at desc", null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    String listName = cursor.getString(cursor.getColumnIndex("name"));
+                    listIndex.add(listName);
+                } while (cursor.moveToNext());
+            } else {
+                listIndex.add(getString(R.string.spinner_empty));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG, "Error: Leading list index failed." + e.toString());
         }
-        cursor.close();
+        Log.d(TAG,"Completed: DBHelper finished to read list index!");
         return listIndex;
     }
 
@@ -62,12 +67,12 @@ public class DBHelper extends ContextWrapper {
             newValues.put("_id", getCount(DBOpenHelper.LIST_INDEX) + 1);
             newValues.put("create_at", values.getAsLong("update_at"));
             count = (int) mySQLiteDatabase.insert(DBOpenHelper.LIST_INDEX, null, newValues);
-            Log.d(TAG, "Completed: the list ["+newListName+"] add the table on the table ["+DBOpenHelper.ITEM_INDEX+"!");
+            Log.d(TAG, "Completed: the list [" + newListName + "] add the table on the table [" + DBOpenHelper.ITEM_INDEX + "!");
             newValues.putAll(values);
-            mySQLiteDatabase.insert(DBOpenHelper.LIST_ACTIVE, null, newValues);
-            Log.d(TAG,"Completed: the list ["+newListName+"] add the table on the table ["+DBOpenHelper.ITEM_ACTIVE+"!");
+            count = (int)mySQLiteDatabase.insert(DBOpenHelper.LIST_ACTIVE, null, newValues);
+            Log.d(TAG, "Completed: the list [" + newListName + "] add the table on the table [" + DBOpenHelper.ITEM_ACTIVE + "!");
         } else {
-            Log.d(TAG,"Completed: the list ["+oldListName+"] has renamed to ["+newListName+"]!");
+            Log.d(TAG, "Completed: the list [" + oldListName + "] has renamed to [" + newListName + "]!");
         }
         return count;
     }
@@ -75,20 +80,23 @@ public class DBHelper extends ContextWrapper {
     //買い物リスト削除(削除予定テーブルへ移動)
     public void moveToDeletedTable(String listName, String tableNameFrom) {
         ContentValues values = new ContentValues();
-        Cursor cursor = mySQLiteDatabase.query(tableNameFrom, null, "name = ?", new String[]{listName}, null, null, null, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                values.put("_id", cursor.getLong(cursor.getColumnIndex("_id")));
-                values.put("create_at", cursor.getLong(cursor.getColumnIndex("create_at")));
-            } while (cursor.moveToNext());
+        try (Cursor cursor = mySQLiteDatabase.query(tableNameFrom, null, "name = ?", new String[]{listName}, null, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    values.put("_id", cursor.getLong(cursor.getColumnIndex("_id")));
+                    values.put("create_at", cursor.getLong(cursor.getColumnIndex("create_at")));
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG, "Error: Moving a list to deleted table failed. " + e.toString());
         }
-        cursor.close();
-        int count = getCount(DBOpenHelper.LIST_DELETED);
-        if (mySQLiteDatabase.insert(DBOpenHelper.LIST_DELETED, null, values) == count + 1) {
-            mySQLiteDatabase.delete(DBOpenHelper.LIST_ACTIVE,"name = ?",new String[]{listName});
-            Log.d(TAG,"Complete: the list ["+listName+"] is deleted!");
+        int listToDelete = (int)mySQLiteDatabase.insert(DBOpenHelper.LIST_DELETED, null, values);
+        if (listToDelete != -1) {
+            mySQLiteDatabase.delete(DBOpenHelper.LIST_ACTIVE, "name = ?", new String[]{listName});
+            Log.d(TAG, "Complete: the list [" + listName + "] is deleted!");
         } else {
-            Log.w(TAG, "Error: the list ["+listName+"] is still alive!");
+            Log.w(TAG, "Error: the list [" + listName + "] is still alive!");
         }
     }
 
@@ -110,9 +118,10 @@ public class DBHelper extends ContextWrapper {
     }
 
     //データ削除　オーバーロード
-    public void deleteDB(String tableName) {
+    public int deleteDB(String tableName) {
         //全件削除
-        mySQLiteDatabase.delete(tableName, null, null);
+        int count = mySQLiteDatabase.delete(tableName, null, null);
+        return count;
     }
 
     public void deleteDB(String tableName, String key) {
@@ -123,11 +132,13 @@ public class DBHelper extends ContextWrapper {
     //データ件数取得
     public int getCount(String tableName) {
         int count = 0;
-        Cursor cursor = null;
-        cursor = mySQLiteDatabase.query
-                (tableName, null, null, null, null, null, null);
-        count = cursor.getCount();
-        cursor.close();
+        try (Cursor cursor = mySQLiteDatabase.query
+                (tableName, null, null, null, null, null, null)) {
+            count = cursor.getCount();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG, "Error: You could not get amount of the rows. " + e.toString());
+        }
         return count;
     }
 
@@ -136,15 +147,19 @@ public class DBHelper extends ContextWrapper {
     public int getListId(String listName) {
         int id = 0;
         String[] columns = {"_id"};
-        Cursor cursor = null;
-        cursor = mySQLiteDatabase.query
-                (DBOpenHelper.LIST_ACTIVE, columns, "name = ?", new String[]{listName}, null, null, null, null);
-        if (cursor != null && cursor.getCount() == 1) {
-            id = cursor.getInt(cursor.getColumnIndex("_id"));
-        } else {
-            id = -1;
+        try (Cursor cursor = mySQLiteDatabase.query
+                (DBOpenHelper.LIST_ACTIVE, columns, "name = ?", new String[]{listName}, null, null, null, null)) {
+            if (cursor != null && cursor.getCount() == 1 && cursor.moveToFirst()) {
+                do {
+                    id = cursor.getInt(cursor.getColumnIndex("_id"));
+                } while (cursor.moveToNext());
+            } else {
+                id = -1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG, "Error: You could not get List_id. " + e.toString());
         }
-        cursor.close();
         return id;
     }
 

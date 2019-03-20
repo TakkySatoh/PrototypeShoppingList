@@ -20,21 +20,20 @@ public class ShoppingItemContent {
         itemList.add(new ShoppingItem(CONTENT_TYPE_HEADER));
         itemList.add(new ShoppingItem(CONTENT_TYPE_FOOTER));
         itemList.add(new ShoppingItem(CONTENT_TYPE_HEADER));
-
-        DBOpenHelper dbh = new DBOpenHelper(context);
-        Cursor cursor;
-        try (SQLiteDatabase db = dbh.getWritableDatabase()) {
-            String sql = "select "+ DBOpenHelper.ITEM_ACTIVE+".name,"
-                    + DBOpenHelper.ITEM_ACTIVE+".amount,"
-                    + DBOpenHelper.ITEM_ACTIVE+".has_got,"
-                    + DBOpenHelper.ORDER_INDEX+".order_number from "
-                    + DBOpenHelper.ORDER_INDEX+
-                    " inner join "
-                    + DBOpenHelper.ITEM_ACTIVE+" on "
-                    + DBOpenHelper.ORDER_INDEX +".item_id = "+ DBOpenHelper.ITEM_ACTIVE
-                    +"._id where "+ DBOpenHelper.ORDER_INDEX+".list_id = "+listId;
-
-        }
+//        DBOpenHelper dbh = new DBOpenHelper(context);
+//        Cursor cursor;
+//        try (SQLiteDatabase db = dbh.getWritableDatabase()) {
+//            String sql = "select "+ DBOpenHelper.ITEM_ACTIVE+".name,"
+//                    + DBOpenHelper.ITEM_ACTIVE+".amount,"
+//                    + DBOpenHelper.ITEM_ACTIVE+".has_got,"
+//                    + DBOpenHelper.ORDER_INDEX+".order_number from "
+//                    + DBOpenHelper.ORDER_INDEX+
+//                    " inner join "
+//                    + DBOpenHelper.ITEM_ACTIVE+" on "
+//                    + DBOpenHelper.ORDER_INDEX +".item_id = "+ DBOpenHelper.ITEM_ACTIVE
+//                    +"._id where "+ DBOpenHelper.ORDER_INDEX+".list_id = "+listId;
+//
+//        }
         return itemList;
     }
 

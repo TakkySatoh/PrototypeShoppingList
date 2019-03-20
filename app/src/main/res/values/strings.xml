@@ -21,12 +21,13 @@
     <string name="reply_update">内容を更新</string>
     <string name="reply_create">項目を作る</string>
     <string name="hint">%1$sを入力してください</string>
-    <string name="empty">商品が登録されていません</string>
+    <string name="empty">買い物リストが何も登録されていません</string>
     <string name="attention">確認</string>
     <string name="alert_create_list">作りたいリスト名を記入してください。</string>
     <string name="alert_rename_list">変更後のリスト名を記入してください。変更前: 「%1$s」→</string>
     <string name="alert_move_to">移動先のリストを選択してください</string>
     <string name="alert_guidance">作りたいリスト名</string>
+    <string name="alert_finish">ソフトを終了します。\n終了しても良いですか?</string>
     <string name="toast_error_empty">エラー: リスト名が入力されていません。\n一文字以上何らかの文字を入力して下さい</string>
     <string name="toast_error_duplicate">エラー: 同一名のリストが既に存在しています。 \n別の名称を入力して下さい</string>
     <string name="toast_finish_create_list">完了: リスト「%1$s」を新規に作成しました</string>
@@ -41,6 +42,7 @@
     <string name="reply_create_list">作成する</string>
     <string name="reply_change">変更する</string>
     <string name="reply_move">移動する</string>
+    <string name="reply_finish">終了する</string>
     <string name="cancel">キャンセル</string>
     <string name="spinner_empty">リストが何もありません</string>
 
