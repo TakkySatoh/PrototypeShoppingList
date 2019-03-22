@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,30 +18,33 @@ public class ShoppingItemContent {
     private List<ShoppingItem> itemList = new ArrayList<>();
 
     public List<ShoppingItem> getItemList(Context context, int listId) {
-        itemList.add(new ShoppingItem(CONTENT_TYPE_HEADER));
-        itemList.add(new ShoppingItem(CONTENT_TYPE_FOOTER));
-        itemList.add(new ShoppingItem(CONTENT_TYPE_HEADER));
-//        DBOpenHelper dbh = new DBOpenHelper(context);
-//        Cursor cursor;
-//        try (SQLiteDatabase db = dbh.getWritableDatabase()) {
-//            String sql = "select "+ DBOpenHelper.ITEM_ACTIVE+".name,"
-//                    + DBOpenHelper.ITEM_ACTIVE+".amount,"
-//                    + DBOpenHelper.ITEM_ACTIVE+".has_got,"
-//                    + DBOpenHelper.ORDER_INDEX+".order_number from "
-//                    + DBOpenHelper.ORDER_INDEX+
-//                    " inner join "
-//                    + DBOpenHelper.ITEM_ACTIVE+" on "
-//                    + DBOpenHelper.ORDER_INDEX +".item_id = "+ DBOpenHelper.ITEM_ACTIVE
-//                    +"._id where "+ DBOpenHelper.ORDER_INDEX+".list_id = "+listId;
-//
-//        }
+        DBHelper dbHelper = new DBHelper(context);
+        try {
+            itemList = dbHelper.readItemList(listId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(DBHelper.TAG, "Error: You could not get Item List. " + e.toString());
+
+        } finally {
+            if (dbHelper != null) {
+                dbHelper.closeDB();
+            }
+        }
         return itemList;
     }
 
     public List<ShoppingItem> createSampleItemList(int count, String place) {
         itemList.add(new ShoppingItem(CONTENT_TYPE_HEADER));
         for (int i = 0; i < count; i++) {
-            itemList.add(new ShoppingItem(false, "アイテム" + (i + 1), 1, 100, "これはアイテム" + (i + 1) + "です", place, System.currentTimeMillis(), System.currentTimeMillis()));
+            itemList.add(new ShoppingItem(
+                    false,
+                    "アイテム" + (i + 1),
+                    1,
+                    100,
+                    "これはアイテム" + (i + 1) + "です",
+                    place,
+                    System.currentTimeMillis(),
+                    System.currentTimeMillis()));
             if (i >= count / 2) {
                 itemList.get(i + 1).setHasGot(true);
             }
@@ -51,11 +55,20 @@ public class ShoppingItemContent {
     }
 
     public ShoppingItem createItem(Intent data) {
-        ShoppingItem newItem = new ShoppingItem(data.getBooleanExtra("hasGot", false), data.getStringExtra("name"), data.getIntExtra("amount", 0), data.getIntExtra("price", 0), data.getStringExtra("description"), data.getStringExtra("place"), data.getLongExtra("createDate", System.currentTimeMillis()), data.getLongExtra("lastUpdateDate", System.currentTimeMillis()));
+        ShoppingItem newItem = new ShoppingItem(
+                data.getBooleanExtra("hasGot", false),
+                data.getStringExtra("name"),
+                data.getIntExtra("amount", 0),
+                data.getIntExtra("price", 0),
+                data.getStringExtra("description"),
+                data.getStringExtra("place"),
+                data.getLongExtra("createDate", System.currentTimeMillis()),
+                data.getLongExtra("lastUpdateDate", System.currentTimeMillis())
+        );
         return newItem;
     }
 
-    public class ShoppingItem {
+    public static class ShoppingItem {
 
         private int contentType;
         private boolean hasGot;

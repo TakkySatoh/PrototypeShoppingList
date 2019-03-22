@@ -27,6 +27,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     private static final String ARG_COLUMN_COUNT = "column-count";
     // TODO: Customize parameters
     private int mColumnCount = 1;
+    private String listId;
     private OnListFragmentInteractionListener mListener;
 
     private ItemRecyclerViewAdapter mRVAdapter;
@@ -58,6 +59,8 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
+
+        listId = getTag();
     }
 
     @Override
@@ -254,13 +257,17 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                 ShoppingItem newItem = new ShoppingItemContent().createItem(data);
                 boolean hasGot;
                 if (mRVAdapter.getItemList().get(mPosition).isHasGot() == newItem.isHasGot()) {
+                    //購入済フラグ書き換え無し…更新対象アイテムの一つ下に更新済アイテムを追加
                     hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(), mPosition + 1);
                 } else {
+                    //購入済フラグ書き換え有り…各々の新規アイテム追加位置にアイテムを追加
                     hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(), -1);
                 }
                 if (!hasGot && mPosition >= mRVAdapter.getToBuyItemAmount() + 2) {
+                    //更新後アイテムが購入済フラグ無し&更新前アイテムが購入済 →購入予定位置に追加につき、更新対象アイテムの一つ下を削除
                     mRVAdapter.removeItem(mPosition + 1);
                 } else {
+                    //上記以外 →購入済位置に追加につき、更新対象アイテムを削除
                     mRVAdapter.removeItem(mPosition);
                 }
                 Toast.makeText(getActivity(), data.getStringExtra("name") + "を更新しました", Toast.LENGTH_LONG).show();

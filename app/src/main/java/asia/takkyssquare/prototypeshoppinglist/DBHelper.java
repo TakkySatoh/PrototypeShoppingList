@@ -16,7 +16,7 @@ import asia.takkyssquare.prototypeshoppinglist.ShoppingItemContent.ShoppingItem;
 
 public class DBHelper extends ContextWrapper {
 
-    private static final String TAG = "DBHelper";
+    public static final String TAG = "DBHelper";
 
     private SQLiteDatabase mySQLiteDatabase = null;
 
@@ -50,11 +50,12 @@ public class DBHelper extends ContextWrapper {
             e.printStackTrace();
             Log.w(TAG, "Error: Leading list index failed." + e.toString());
         }
-        Log.d(TAG,"Completed: DBHelper finished to read list index!");
+        Log.d(TAG, "Completed: DBHelper finished to read list index!");
         return listIndex;
     }
 
     //買い物リスト新規追加・買い物リスト名変更
+    //(mySQLiteDatabase#update()の戻り値=0 → 新規追加扱い。INDEX→ACTIVEの順に登録を行う)
     public int updateListIndex(String oldListName, String newListName) {
         int count = 0;
         ContentValues values = new ContentValues();
@@ -69,7 +70,7 @@ public class DBHelper extends ContextWrapper {
             count = (int) mySQLiteDatabase.insert(DBOpenHelper.LIST_INDEX, null, newValues);
             Log.d(TAG, "Completed: the list [" + newListName + "] add the table on the table [" + DBOpenHelper.ITEM_INDEX + "!");
             newValues.putAll(values);
-            count = (int)mySQLiteDatabase.insert(DBOpenHelper.LIST_ACTIVE, null, newValues);
+            count = (int) mySQLiteDatabase.insert(DBOpenHelper.LIST_ACTIVE, null, newValues);
             Log.d(TAG, "Completed: the list [" + newListName + "] add the table on the table [" + DBOpenHelper.ITEM_ACTIVE + "!");
         } else {
             Log.d(TAG, "Completed: the list [" + oldListName + "] has renamed to [" + newListName + "]!");
@@ -91,7 +92,7 @@ public class DBHelper extends ContextWrapper {
             e.printStackTrace();
             Log.w(TAG, "Error: Moving a list to deleted table failed. " + e.toString());
         }
-        int listToDelete = (int)mySQLiteDatabase.insert(DBOpenHelper.LIST_DELETED, null, values);
+        int listToDelete = (int) mySQLiteDatabase.insert(DBOpenHelper.LIST_DELETED, null, values);
         if (listToDelete != -1) {
             mySQLiteDatabase.delete(DBOpenHelper.LIST_ACTIVE, "name = ?", new String[]{listName});
             Log.d(TAG, "Complete: the list [" + listName + "] is deleted!");
@@ -100,9 +101,56 @@ public class DBHelper extends ContextWrapper {
         }
     }
 
-    public List<ShoppingItem> readItemList(String tableName, String key) {
+    //買い物リスト読み込み
+    public List<ShoppingItem> readItemList(int listId) {
         List<ShoppingItem> itemIndex = new ArrayList<>();
+        ShoppingItem item;
+        int toBuyAmount = 0;
+        String sql = "select * from "
+                + DBOpenHelper.ORDER_INDEX +
+                " inner join " + DBOpenHelper.ITEM_ACTIVE
+                + " on " + DBOpenHelper.ORDER_INDEX + ".item_id = " + DBOpenHelper.ITEM_ACTIVE
+                + "._id where " + DBOpenHelper.ORDER_INDEX + ".list_id = " + listId
+                + "order by " + DBOpenHelper.ORDER_INDEX + ".order_number asc"
+                + ";";
+        try (Cursor cursor = mySQLiteDatabase.rawQuery(sql, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    boolean hasGot = false;
+                    if (cursor.getLong(cursor.getColumnIndex("has_got")) == DBOpenHelper.YES) {
+                        hasGot = true;
+                    }
+                    item = new ShoppingItem(
+                            hasGot,
+                            cursor.getString(cursor.getColumnIndex("name")),
+                            cursor.getInt(cursor.getColumnIndex("amount")),
+                            cursor.getInt(cursor.getColumnIndex("price")),
+                            cursor.getString(cursor.getColumnIndex("comment")),
+                            cursor.getString(cursor.getColumnIndex("place")),
+                            cursor.getLong(cursor.getColumnIndex("create_at")),
+                            cursor.getLong(cursor.getColumnIndex("update_at"))
+                    );
+                    if (!item.isHasGot()) {
+                        itemIndex.add(item);
+                        toBuyAmount++;
+                    } else {
+                        itemIndex.add(toBuyAmount + 1, item);
+                    }
+                } while (cursor.moveToNext());
+                itemIndex.add(new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
+                itemIndex.add(toBuyAmount + 1, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_FOOTER));
+                itemIndex.add(toBuyAmount+2,new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG, "Error: Reading Item List is failed. " + e.toString());
+        }
         return itemIndex;
+    }
+
+    public ShoppingItem updateItem() {
+
+        return null;
     }
 
     //データ更新

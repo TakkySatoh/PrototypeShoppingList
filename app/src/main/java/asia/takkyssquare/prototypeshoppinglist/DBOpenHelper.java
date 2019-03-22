@@ -21,6 +21,9 @@ public class DBOpenHelper extends SQLiteOpenHelper {
 
     public static final String ORDER_INDEX = "order_index";
 
+    public static final int YES = 1;
+    public static final int NO = 0;
+
     private final Context mContext;
 
     public DBOpenHelper(Context context) {
