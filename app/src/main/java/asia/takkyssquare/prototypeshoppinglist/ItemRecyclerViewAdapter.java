@@ -1,7 +1,11 @@
 package asia.takkyssquare.prototypeshoppinglist;
 
+import android.content.Context;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -11,7 +15,9 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import asia.takkyssquare.prototypeshoppinglist.ShoppingItemContent.ShoppingItem;
@@ -348,7 +354,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
      * 新規かつ購入予定…購入予定行の最後尾 / 新規かつ購入済…購入済み行の先頭
      * それ以外…引数で指定された位置
      */
-    public boolean addItem(ShoppingItem item, boolean hasGot, int position) {
+    public boolean addItem(Context base, ShoppingItem item, boolean hasGot, int position) {
         if (!hasGot) {
             if (position == -1) {
                 position = toBuyItemAmount + 1;
@@ -391,9 +397,63 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
      */
     @Override
     public boolean onItemMove(int fromPosition, int toPosition) {
-        Collections.swap(mItemList, fromPosition, toPosition);
+//        ShoppingItem temp = mItemList.remove(fromPosition);
+//        mItemList.add(toPosition, temp);
+//        Collections.swap(mItemList, fromPosition, toPosition);
+        int lower = 0;
+        int upper = 0;
+        if (fromPosition < toPosition) {
+            lower = fromPosition;
+            upper = toPosition;
+        } else {
+            lower = toPosition;
+            upper = fromPosition;
+        }
+        List<Integer> orders = new ArrayList<>();
+        for (int i = lower; i <= upper; i++) {
+            orders.add(mItemList.get(i).getOrder());
+        }
+        Collections.rotate(mItemList.subList(lower, upper + 1), -1);
+        Collections.rotate(orders, -1);
+        //並び替え時の並びを元に、ShoppingItem.orderを更新の上、DB上の「order_index」も併せて更新
+        DBHelper dbHelper = new DBHelper((Context) mListener);
+        try {
+            dbHelper.beginTransaction();
+            for (int i = lower; i <= upper; i++) {
+                int j = 0;
+                mItemList.get(i).setOrder(orders.get(j));
+                dbHelper.updateOrder(mItemList.get(i));
+                j++;
+            }
+            dbHelper.setTransactionSuccessful();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(DBHelper.TAG, "Error: DBHelper could not update order index. "+e.toString());
+        } finally {
+            if (dbHelper != null) {
+                dbHelper.endTransaction();
+                dbHelper.closeDB();
+            }
+        }
         notifyItemMoved(fromPosition, toPosition);
         return true;
+    }
+
+    //    @RequiresApi(api = Build.VERSION_CODES.N)
+    public void sortItems() {
+        for (int i = toBuyItemAmount; i > 0; i--) {
+            if (mItemList.get(i).getOrder() <= mItemList.get(i - 1).getOrder()) {
+                mItemList.add(i - 1, mItemList.remove(i));
+            } else {
+                break;
+            }
+        }
+//        mItemList.sort(new Comparator<ShoppingItem>() {
+//            @Override
+//            public int compare(ShoppingItem item1, ShoppingItem item2) {
+//                return item1.getOrder() - item2.getOrder();
+//            }
+//        });
     }
 
     /**

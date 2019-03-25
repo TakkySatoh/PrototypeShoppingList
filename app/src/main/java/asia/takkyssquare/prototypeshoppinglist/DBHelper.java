@@ -63,7 +63,7 @@ public class DBHelper extends ContextWrapper {
                 " inner join " + DBOpenHelper.ITEM_ACTIVE
                 + " on " + DBOpenHelper.ORDER_INDEX + ".item_id = " + DBOpenHelper.ITEM_ACTIVE
                 + "._id where " + DBOpenHelper.ORDER_INDEX + ".list_id = " + listId
-                + "order by " + DBOpenHelper.ORDER_INDEX + ".order_number asc"
+                + " order by " + DBOpenHelper.ORDER_INDEX + ".order_number asc"
                 + ";";
         try (Cursor cursor = mySQLiteDatabase.rawQuery(sql, null)) {
             if (cursor != null && cursor.moveToFirst()) {
@@ -74,9 +74,9 @@ public class DBHelper extends ContextWrapper {
                     }
                     item = new ShoppingItem(
                             hasGot,
-                            cursor.getInt(cursor.getColumnIndex(DBOpenHelper.ITEM_ACTIVE + "._id")),
-                            cursor.getInt(cursor.getColumnIndex(DBOpenHelper.ORDER_INDEX + ".list_id")),
-                            cursor.getInt(cursor.getColumnIndex(DBOpenHelper.ORDER_INDEX + ".order_number")),
+                            cursor.getInt(cursor.getColumnIndex("item_id")),
+                            cursor.getInt(cursor.getColumnIndex("list_id")),
+                            cursor.getInt(cursor.getColumnIndex("order_number")),
                             cursor.getString(cursor.getColumnIndex("name")),
                             cursor.getInt(cursor.getColumnIndex("amount")),
                             cursor.getInt(cursor.getColumnIndex("price")),
@@ -84,21 +84,27 @@ public class DBHelper extends ContextWrapper {
                             cursor.getString(cursor.getColumnIndex("place")),
                             cursor.getLong(cursor.getColumnIndex("create_at")),
                             cursor.getLong(cursor.getColumnIndex("update_at")));
+                    itemIndex.add(item);
                     if (!item.isHasGot()) {
-                        itemIndex.add(item);
                         toBuyAmount++;
-                    } else {
-                        itemIndex.add(toBuyAmount + 1, item);
                     }
                 } while (cursor.moveToNext());
-                itemIndex.add(new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
-                itemIndex.add(toBuyAmount + 1, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_FOOTER));
-                itemIndex.add(toBuyAmount + 2, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
+            } else {
+                int count = cursor.getCount();
+                Log.w(TAG, "Error: Cursor has some problems. count of results = " + count + ".");
             }
         } catch (Exception e) {
             e.printStackTrace();
             Log.w(TAG, "Error: Reading Item List is failed. " + e.toString());
         }
+        for (int i = 0; i < itemIndex.size(); i++) {
+            if (itemIndex.get(i).isHasGot()) {
+                itemIndex.add(toBuyAmount, itemIndex.remove(i));
+            }
+        }
+        itemIndex.add(0, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
+        itemIndex.add(toBuyAmount + 1, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_FOOTER));
+        itemIndex.add(toBuyAmount + 2, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
         return itemIndex;
     }
 
@@ -107,10 +113,15 @@ public class DBHelper extends ContextWrapper {
     public int updateListIndex(String oldListName, String newListName) {
         int count = 0;
         ContentValues values = new ContentValues();
-        values.put("name", newListName);
         values.put("update_at", System.currentTimeMillis());
-        count = mySQLiteDatabase.update
-                (DBOpenHelper.LIST_ACTIVE, values, "name='" + oldListName + "'", null);
+        if (oldListName != null) {
+            values.put("name", newListName);
+            count = mySQLiteDatabase.update
+                    (DBOpenHelper.LIST_ACTIVE, values, "name = ?", new String[]{oldListName});
+        } else {
+            count = mySQLiteDatabase.update
+                    (DBOpenHelper.LIST_ACTIVE, values, "name = ?", new String[]{newListName});
+        }
         if (count == 0) {
             ContentValues newValues = new ContentValues();
             newValues.put("_id", getCount(DBOpenHelper.LIST_INDEX) + 1);
@@ -131,7 +142,6 @@ public class DBHelper extends ContextWrapper {
         boolean isCreate = false;
         ContentValues values = new ContentValues();
         values.put("create_at", data.getLongExtra("create_at", 0));
-        values.put("update_at", data.getLongExtra("update_at", 0));
         int itemId = data.getIntExtra("itemId", 0);
         if (itemId == 0) {
             isCreate = true;
@@ -142,6 +152,7 @@ public class DBHelper extends ContextWrapper {
         } else {
             values.put("has_got", 0);
         }
+        values.put("update_at", data.getLongExtra("update_at", 0));
         values.put("name", data.getStringExtra("name"));
         values.put("amount", data.getIntExtra("amount", 0));
         values.put("price", data.getIntExtra("price", 0));
@@ -153,6 +164,32 @@ public class DBHelper extends ContextWrapper {
             mySQLiteDatabase.update(DBOpenHelper.ITEM_ACTIVE, values, "_id = ?", new String[]{Integer.toString(itemId)});
         }
         return itemId;
+    }
+
+    public List<ShoppingItem> createSampleItemList(int listId){
+        List<ShoppingItem> itemIndex = new ArrayList<>();
+        return itemIndex;
+    }
+
+    //並び順データ更新・新規追加
+    public void updateOrder(ShoppingItem item) {
+        int count = 0;
+        int itemId = item.getItemId();
+        ContentValues values = new ContentValues();
+        values.put("order_number", item.getOrder());
+        count = mySQLiteDatabase.update(DBOpenHelper.ORDER_INDEX, values, "item_id = ?", new String[]{Integer.toString(itemId)});
+        if (count == 0) {
+            values.put("item_id", itemId);
+            values.put("list_id", item.getListId());
+            count = (int) mySQLiteDatabase.insert(DBOpenHelper.ORDER_INDEX, null, values);
+            if (count == 0) {
+                Log.w(TAG, "Error: DBHelper could not insert new order data.");
+            } else {
+                Log.d(TAG, "Complete: DBHelper finished to insert new order data!");
+            }
+        } else {
+            Log.d(TAG, "Complete: DBHelper finished to update the order data!");
+        }
     }
 
     //買い物リスト削除(削除予定テーブルへ移動)
@@ -202,16 +239,45 @@ public class DBHelper extends ContextWrapper {
         }
     }
 
-    //データ更新
     //テーブル削除　オーバーロード
-    public int deleteDB(String tableName) {
-        //全件削除
+    public int deleteDB(String tableName) {     //全件削除
         int count = mySQLiteDatabase.delete(tableName, null, null);
         return count;
     }
-    public void deleteDB(String tableName, String key) {
-        //１件削除
+
+    public void deleteDB(String tableName, String key) {   //１件削除
         mySQLiteDatabase.delete(tableName, "item1='" + key + "'", null);
+    }
+
+    //並び順データ削除　オーバーロード
+    public void removeOrder(Intent data) {  //アイテム単位
+        int count = 0;
+        int itemId = data.getIntExtra("itemId", 0);
+        if (itemId != 0) {
+            count = mySQLiteDatabase.delete(DBOpenHelper.ORDER_INDEX, "item_id = ?", new String[]{Integer.toString(itemId)});
+        } else {
+            Log.w(TAG, "Error: You could not get item_id.");
+        }
+        if (count != 0) {
+            Log.d(TAG, "Completed: DBHelper finished to delete order info of itemId=" + itemId + "!");
+        } else {
+            Log.w(TAG, "Error: DBHelper could not delete order info of itemId=" + itemId + ".");
+        }
+    }
+
+    public void removeOrder(String listName) {  //リスト単位
+        int count = 0;
+        int listId = getListId(listName);
+        if (listId != 0) {
+            count = mySQLiteDatabase.delete(DBOpenHelper.ORDER_INDEX, "list_id = ?", new String[]{Integer.toString(listId)});
+        } else {
+            Log.w(TAG, "Error: You could not get list_id.");
+        }
+        if (count != 0) {
+            Log.d(TAG, "Completed: DBHelper finished to delete order info of listId=" + listId + "!");
+        } else {
+            Log.w(TAG, "Error: DBHelper could not delete order info of listId=" + listId + ".");
+        }
     }
 
     //データ件数取得
@@ -226,9 +292,9 @@ public class DBHelper extends ContextWrapper {
         }
         return count;
     }
-
     //リスト名称よりリストIDを検索
     //該当するリスト名がない場合は、エラーコード「-1」を戻す →要:エラー表示を呼び出し先に記述
+
     public int getListId(String listName) {
         int id = 0;
         String[] columns = {"_id"};
@@ -248,6 +314,7 @@ public class DBHelper extends ContextWrapper {
         return id;
     }
 
+    //データ更新
     public void updateDB(String tableName, String[] columus) {
         ContentValues values = new ContentValues();
 //        values.put("item1", columus[0]);
@@ -259,4 +326,21 @@ public class DBHelper extends ContextWrapper {
         }
     }
 
+    public void beginTransaction() {
+        if(mySQLiteDatabase != null){
+            mySQLiteDatabase.beginTransaction();
+        }
+    }
+
+    public void setTransactionSuccessful() {
+        if(mySQLiteDatabase != null){
+            mySQLiteDatabase.setTransactionSuccessful();
+        }
+    }
+
+    public void endTransaction() {
+        if (mySQLiteDatabase != null){
+            mySQLiteDatabase.endTransaction();
+        }
+    }
 }

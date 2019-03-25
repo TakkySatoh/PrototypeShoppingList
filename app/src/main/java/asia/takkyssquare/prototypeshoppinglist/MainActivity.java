@@ -2,9 +2,7 @@ package asia.takkyssquare.prototypeshoppinglist;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -105,6 +103,17 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         mSpinner.setOnItemSelectedListener(null);
         mSpinner.setSelection(0, false);
         mSpinner.setOnItemSelectedListener(this);
+        DBHelper dbHelper = new DBHelper(getApplicationContext());
+        try {
+            dbHelper.updateListIndex(null,mListNameList.get(0));
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG,"Error: DBHelper failed to update updated time of the top list."+e.toString());
+        } finally {
+            if (dbHelper != null) {
+                dbHelper.closeDB();
+            }
+        }
     }
 
     @Override
@@ -301,6 +310,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
             DBHelper dbHelper = new DBHelper(getApplicationContext());
             try {
                 dbHelper.moveToDeletedTable(listName, DBOpenHelper.LIST_ACTIVE);
+                dbHelper.removeOrder(listName);
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.w(TAG, "Error: DBHelper could not move the list to deleted table." + e.toString());
@@ -374,10 +384,10 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
     protected void onDestroy() {
         DBHelper dbHelper = new DBHelper(getApplicationContext());
         try {
-            int deletedTableAmount = dbHelper.deleteDB(DBOpenHelper.LIST_DELETED);
-            Log.d(TAG, "Completed: DBHelper cleaned " + DBOpenHelper.LIST_DELETED + " table with " + deletedTableAmount + " lists!");
-            deletedTableAmount = dbHelper.deleteDB(DBOpenHelper.ITEM_DELETED);
+            int deletedTableAmount = dbHelper.deleteDB(DBOpenHelper.ITEM_DELETED);
             Log.d(TAG,"Completed: DBHelper cleaned " + DBOpenHelper.ITEM_DELETED + " table with " + deletedTableAmount + " items!");
+            deletedTableAmount = dbHelper.deleteDB(DBOpenHelper.LIST_DELETED);
+            Log.d(TAG, "Completed: DBHelper cleaned " + DBOpenHelper.LIST_DELETED + " table with " + deletedTableAmount + " lists!");
         } catch (Exception e) {
             e.printStackTrace();
             Log.w(TAG, "Error: DBHelper could not delete elements of deleted table." + e.toString());

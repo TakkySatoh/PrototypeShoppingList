@@ -2,11 +2,14 @@ package asia.takkyssquare.prototypeshoppinglist;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +31,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     private static final String ARG_COLUMN_COUNT = "column-count";
     // TODO: Customize parameters
     private int mColumnCount = 1;
+
     private int listId;
     private OnListFragmentInteractionListener mListener;
 
@@ -90,7 +94,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
 //        if (listName.equals("サンプル")) {
 //            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().createSampleItemList(10, listName), false, mListener, this, this);
 //        } else {
-            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(getContext(), listId), false, mListener, this, this);
+        mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(getContext(), listId), false, mListener, this, this);
 //        }
         mRVAdapter.setOnItemClickListener(this);
         rvItemList.setAdapter(mRVAdapter);
@@ -208,7 +212,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     public void moveItemBetweenRecyclerViews(boolean hasGot, int position) {
         ShoppingItem item = mRVAdapter.removeItem(position);
         item.setHasGot(hasGot);
-        mRVAdapter.addItem(item, item.isHasGot(), -1);
+        mRVAdapter.addItem(getContext(), item, item.isHasGot(), -1);
     }
 
     /**
@@ -227,15 +231,15 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         intent.putExtra("requestCode", requestCode);
         if (item != null) {
             intent.putExtra("hasGot", item.isHasGot());
-            if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE) {
-                intent.putExtra("itemId", 0);
-                intent.putExtra("listId", listId);
-                intent.putExtra("order", 0);
-            } else {
-                intent.putExtra("itemId", item.getItemId());
-                intent.putExtra("listId", item.getListId());
-                intent.putExtra("order", item.getOrder());
-            }
+//            if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE) {
+//                intent.putExtra("itemId", 0);
+//                intent.putExtra("listId", listId);
+//                intent.putExtra("order", 0);
+//            } else {
+            intent.putExtra("itemId", item.getItemId());
+            intent.putExtra("listId", item.getListId());
+            intent.putExtra("order", item.getOrder());
+//            }
             intent.putExtra("name", item.getName());
             intent.putExtra("amount", item.getAmount());
             intent.putExtra("price", item.getPrice());
@@ -243,6 +247,10 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
             intent.putExtra("description", item.getDescription());
             intent.putExtra("createDate", item.getCreateDate());
             intent.putExtra("lastUpdateDate", item.getLastUpdateDate());
+        } else {
+            intent.putExtra("itemId", 0);
+            intent.putExtra("listId", listId);
+            intent.putExtra("order", 0);
         }
         startActivityForResult(intent, requestCode);
     }
@@ -256,25 +264,40 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
      * → アイテム情報更新時、アイテム削除時は該当箇所のitemをRecyclerViewより削除
      * ※アイテムのリスト間移動時は、リスナを通じて処理を親Activityへ委譲する
      */
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if ((requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) || resultCode == ShoppingItemEditorActivity.RESULT_CODE_COPY) {
+        if ((requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) || resultCode == ShoppingItemEditorActivity.RESULT_CODE_COPY) {  // 新規アイテム追加・複製
             if (data != null) {
                 ShoppingItem newItem = new ShoppingItemContent().createItem(data);
-                mRVAdapter.addItem(newItem, newItem.isHasGot(), -1);
+                mRVAdapter.addItem(getContext(), newItem, newItem.isHasGot(), -1);
+                DBHelper dbHelper = new DBHelper(getContext());
+                try {
+                    dbHelper.updateOrder(newItem);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.w(DBHelper.TAG, "Error: DBHelper has a problem. " + e.toString());
+                } finally {
+                    if (dbHelper != null) {
+                        dbHelper.closeDB();
+                    }
+                }
                 Toast.makeText(getActivity(), data.getStringExtra("name") + "を追加しました", Toast.LENGTH_LONG).show();
             }
-        } else if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {
+        } else if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {  //アイテムデータ更新
             if (data != null) {
                 ShoppingItem newItem = new ShoppingItemContent().createItem(data);
                 boolean hasGot;
                 if (mRVAdapter.getItemList().get(mPosition).isHasGot() == newItem.isHasGot()) {
                     //購入済フラグ書き換え無し…更新対象アイテムの一つ下に更新済アイテムを追加
-                    hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(), mPosition + 1);
+                    hasGot = mRVAdapter.addItem(getContext(), newItem, newItem.isHasGot(), mPosition + 1);
                 } else {
                     //購入済フラグ書き換え有り…各々の新規アイテム追加位置にアイテムを追加
-                    hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(), -1);
+                    hasGot = mRVAdapter.addItem(getContext(), newItem, newItem.isHasGot(), -1);
+                    if (!newItem.isHasGot()) {
+                        mRVAdapter.sortItems();
+                    }
                 }
                 if (!hasGot && mPosition >= mRVAdapter.getToBuyItemAmount() + 2) {
                     //更新後アイテムが購入済フラグ無し&更新前アイテムが購入済 →購入予定位置に追加につき、更新対象アイテムの一つ下を削除
@@ -283,17 +306,39 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                     //上記以外 →購入済位置に追加につき、更新対象アイテムを削除
                     mRVAdapter.removeItem(mPosition);
                 }
+                DBHelper dbHelper = new DBHelper(getContext());
+                try {
+                    dbHelper.updateOrder(newItem);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.w(DBHelper.TAG, "Error: DBHelper has a problem. " + e.toString());
+                } finally {
+                    if (dbHelper != null) {
+                        dbHelper.closeDB();
+                    }
+                }
                 Toast.makeText(getActivity(), data.getStringExtra("name") + "を更新しました", Toast.LENGTH_LONG).show();
             }
-        } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_DELETE) {
+        } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_DELETE) {   //アイテム削除
             if (data != null) {
                 mRVAdapter.removeItem(mPosition);
+                DBHelper dbHelper = new DBHelper(getContext());
+                try {
+                    dbHelper.removeOrder(data);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.w(DBHelper.TAG, "Error: DBHelper has a problem. " + e.toString());
+                } finally {
+                    if (dbHelper != null) {
+                        dbHelper.closeDB();
+                    }
+                }
                 Toast.makeText(getActivity(), data.getStringExtra("name") + "を削除しました", Toast.LENGTH_LONG).show();
             }
-        } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_MOVE) {
-            if (data != null) {
-                ShoppingItem newItem = new ShoppingItemContent().createItem(data);
-                mListener.onListFragmentInteraction(newItem, resultCode);
+//        } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_MOVE) {
+//            if (data != null) {
+//                ShoppingItem newItem = new ShoppingItemContent().createItem(data);
+//                mListener.onListFragmentInteraction(newItem, resultCode);
 //                new GeneralDialogFragment.Builder(this)
 //                        .title(R.string.alert_move_to)
 //                        .items(MainActivity.mListNameList.toArray(new String[MainActivity.mListNameList.size()]))
@@ -301,7 +346,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
 //                        .positive(R.string.reply_move)
 //                        .negative(R.string.cancel)
 //                        .show();
-            }
+//            }
         }
     }
 

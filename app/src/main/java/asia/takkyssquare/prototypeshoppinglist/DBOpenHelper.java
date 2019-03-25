@@ -76,7 +76,7 @@ public class DBOpenHelper extends SQLiteOpenHelper {
 
     private String createSqlItemTable(String tableName) {
         StringBuilder sb = new StringBuilder()
-                .append("create table if not exists "+tableName+" (")
+                .append("create table if not exists " + tableName + " (")
                 .append("_id integer primary key");
         if (!tableName.contains("deleted")) {
             sb.append(" autoincrement");
@@ -87,19 +87,18 @@ public class DBOpenHelper extends SQLiteOpenHelper {
                     .append(",price integer not null")
                     .append(",place text")
                     .append(",comment text")
-                    .append(",has_got integer not null");
+                    .append(",has_got integer not null")
+                    .append(",update_at integer not null");
         }
         sb.append(",create_at integer not null")
-                .append(",update_at integer not null")
                 .append(");");
         return sb.toString();
     }
 
     private String createOrderIndex(String tableName) {
         StringBuilder sb = new StringBuilder()
-                .append("create table if not exists "+tableName+" (")
-                .append("_id integer primary key")
-                .append(" autoincrement")
+                .append("create table if not exists " + tableName + " (")
+                .append("_id integer primary key").append(" autoincrement")
                 .append(",item_id integer not null")
                 .append(",list_id integer not null")
                 .append(",order_number integer not null")

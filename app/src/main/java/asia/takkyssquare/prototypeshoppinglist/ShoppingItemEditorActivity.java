@@ -158,7 +158,7 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
 //        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
 //            mBtCopyItem.setOnClickListener(new OnButtonClickListener(this));
 //        } else {
-            mBtCopyItem.setEnabled(false);
+        mBtCopyItem.setEnabled(false);
 //        }
 
         /**
@@ -169,7 +169,7 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
 //        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
 //            mBtMove.setOnClickListener(new OnButtonClickListener(this));
 //        } else {
-            mBtMove.setEnabled(false);
+        mBtMove.setEnabled(false);
 //        }
 
         /**
@@ -324,10 +324,12 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
                             dbHelper.closeDB();
                         }
                     }
-                    //DB書き込み時の戻り値が0 →新規追加。dataに戻り値のitemIdを格納
+                    //DB書き込み時の戻り値が0 →新規追加。dataに戻り値のitemIdを格納(itemId, order)
                     if (data.getIntExtra("itemId", 0) == 0) {
                         data.removeExtra("itemId");
                         data.putExtra("itemId", itemId);
+                        data.removeExtra("order");
+                        data.putExtra("order", itemId);
                     }
                     setResult(RESULT_OK, data);
                     finish();
