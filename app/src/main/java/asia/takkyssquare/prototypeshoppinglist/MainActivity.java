@@ -61,6 +61,9 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
             if (dbHelper.getCount(DBOpenHelper.LIST_DELETED) != 0) {
                 dbHelper.deleteDB(DBOpenHelper.LIST_DELETED);
             }
+            if (dbHelper.getCount(DBOpenHelper.ITEM_DELETED) != 0){
+                dbHelper.deleteDB(DBOpenHelper.ITEM_DELETED);
+            }
             mListNameList = dbHelper.readListIndex(DBOpenHelper.LIST_ACTIVE);
             listAmount = dbHelper.getCount(DBOpenHelper.LIST_INDEX);
         } catch (Exception e) {
@@ -372,7 +375,9 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         DBHelper dbHelper = new DBHelper(getApplicationContext());
         try {
             int deletedTableAmount = dbHelper.deleteDB(DBOpenHelper.LIST_DELETED);
-            Log.d(TAG, "Completed: DBHelper cleaned " + DBOpenHelper.ITEM_DELETED + " table with " + deletedTableAmount + " lists!");
+            Log.d(TAG, "Completed: DBHelper cleaned " + DBOpenHelper.LIST_DELETED + " table with " + deletedTableAmount + " lists!");
+            deletedTableAmount = dbHelper.deleteDB(DBOpenHelper.ITEM_DELETED);
+            Log.d(TAG,"Completed: DBHelper cleaned " + DBOpenHelper.ITEM_DELETED + " table with " + deletedTableAmount + " items!");
         } catch (Exception e) {
             e.printStackTrace();
             Log.w(TAG, "Error: DBHelper could not delete elements of deleted table." + e.toString());

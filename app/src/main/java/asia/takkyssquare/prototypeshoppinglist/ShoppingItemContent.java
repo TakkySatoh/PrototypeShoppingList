@@ -2,8 +2,6 @@ package asia.takkyssquare.prototypeshoppinglist;
 
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -38,6 +36,9 @@ public class ShoppingItemContent {
         for (int i = 0; i < count; i++) {
             itemList.add(new ShoppingItem(
                     false,
+                    count,
+                    0,
+                    count,
                     "アイテム" + (i + 1),
                     1,
                     100,
@@ -57,6 +58,9 @@ public class ShoppingItemContent {
     public ShoppingItem createItem(Intent data) {
         ShoppingItem newItem = new ShoppingItem(
                 data.getBooleanExtra("hasGot", false),
+                data.getIntExtra("itemId", 0),
+                data.getIntExtra("listId", 0),
+                data.getIntExtra("order", 0),
                 data.getStringExtra("name"),
                 data.getIntExtra("amount", 0),
                 data.getIntExtra("price", 0),
@@ -72,6 +76,9 @@ public class ShoppingItemContent {
 
         private int contentType;
         private boolean hasGot;
+        private int itemId;
+        private int listId;
+        private int order;
         private String name;
         private int amount;
         private int price;
@@ -80,9 +87,12 @@ public class ShoppingItemContent {
         private final long createDate;
         private long lastUpdateDate;
 
-        public ShoppingItem(boolean hasGot, String name, int amount, int price, String description, String place, long createDate, long lastUpdateDate) {
+        public ShoppingItem(boolean hasGot, int itemId, int listId, int order, String name, int amount, int price, String description, String place, long createDate, long lastUpdateDate) {
             this.contentType = CONTENT_TYPE_ITEM;
             this.hasGot = hasGot;
+            this.itemId = itemId;
+            this.listId = listId;
+            this.order = order;
             this.name = name;
             this.amount = amount;
             this.price = price;
@@ -90,6 +100,30 @@ public class ShoppingItemContent {
             this.place = place;
             this.createDate = createDate;
             this.lastUpdateDate = lastUpdateDate;
+        }
+
+        public int getItemId() {
+            return itemId;
+        }
+
+        public void setItemId(int itemId) {
+            this.itemId = itemId;
+        }
+
+        public int getListId() {
+            return listId;
+        }
+
+        public void setListId(int listId) {
+            this.listId = listId;
+        }
+
+        public int getOrder() {
+            return order;
+        }
+
+        public void setOrder(int order) {
+            this.order = order;
         }
 
         public ShoppingItem(int contentType) {

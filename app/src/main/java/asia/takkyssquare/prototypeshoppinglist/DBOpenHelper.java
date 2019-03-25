@@ -81,7 +81,7 @@ public class DBOpenHelper extends SQLiteOpenHelper {
         if (!tableName.contains("deleted")) {
             sb.append(" autoincrement");
         }
-        if (!tableName.contains("active")||!tableName.contains("deleted")) {
+        if (tableName.contains("active")) {
             sb.append(",name text not null")
                     .append(",amount integer not null")
                     .append(",price integer not null")

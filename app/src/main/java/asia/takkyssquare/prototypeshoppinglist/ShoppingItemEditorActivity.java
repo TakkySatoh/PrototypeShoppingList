@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -20,6 +21,8 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
     public static final int RESULT_CODE_MOVE = 29;
     public static final int RESULT_CODE_COPY = 49;
     public static final int RESULT_CODE_DELETE = 99;
+
+    public static final String TAG = "DBHelper";
 
     private EditText mEtItemName;
     private EditText mEtItemAmount;
@@ -130,13 +133,6 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         mEtItemPrice.addTextChangedListener(new TotalPriceWatcher(mEtItemPrice));
         mEtItemAmount.addTextChangedListener(new TotalPriceWatcher(mEtItemAmount));
 
-//        mEtItemName.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemName, R.string.item_name));
-//        mEtItemAmount.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemAmount, mEtItemPrice, mEtItemTotalPrice));
-//        mEtItemPrice.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemPrice, mEtItemAmount, mEtItemTotalPrice));
-//        mEtItemTotalPrice.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtItemTotalPrice, R.string.total_price));
-//        mEtPlace.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtPlace, R.string.place));
-//        mEtComment.setOnFocusChangeListener(new OnEditTextFocusChangeListener(mEtComment, R.string.comment));
-
         /**
          * 「購入済フラグ」のCheckBoxをレイアウトより取得し、Intentの格納内容に応じて設定
          */
@@ -156,25 +152,25 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
 
         /**
          * 「項目をコピー」のボタンをレイアウトより取得し、リスナを設定
-         *  ※項目の新規生成時は無効化する
+         *  ※今回は無効化する
          */
         mBtCopyItem = findViewById(R.id.btCopyItem);
-        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
-            mBtCopyItem.setOnClickListener(new OnButtonClickListener(this));
-        } else {
+//        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
+//            mBtCopyItem.setOnClickListener(new OnButtonClickListener(this));
+//        } else {
             mBtCopyItem.setEnabled(false);
-        }
+//        }
 
         /**
          * 「項目を移動」のボタンをレイアウトより取得し、リスナを設定
-         *  ※項目の新規生成時は無効化する
+         *  ※今回は無効化する
          */
         mBtMove = findViewById(R.id.btMove);
-        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
-            mBtMove.setOnClickListener(new OnButtonClickListener(this));
-        } else {
+//        if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE) {
+//            mBtMove.setOnClickListener(new OnButtonClickListener(this));
+//        } else {
             mBtMove.setEnabled(false);
-        }
+//        }
 
         /**
          * 「項目を作成」「内容を更新」のボタンをレイアウトより取得し、リスナを設定
@@ -204,20 +200,47 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
     /**
      * GeneralDialogFragmentからのコールバックを記述
      * 項目のコピー時、削除時に利用し、許諾時はsetResult()により、その後の処理を呼び出し元へ引き継ぐ
+     *
      * @param requestCode :リクエストコード
-     * @param resultCode :リザルトコード(ダイアログのボタン種別判定に利用)
-     * @param params :ダイアログ生成時に利用するBundleインスタンス。今回未使用
+     * @param resultCode  :リザルトコード(ダイアログのボタン種別判定に利用)
+     * @param params      :ダイアログ生成時に利用するBundleインスタンス。今回未使用
      */
     @Override
     public void onMyDialogSucceeded(int requestCode, int resultCode, Bundle params) {
+        //アイテム削除
         if (requestCode == RESULT_CODE_DELETE && resultCode == DialogInterface.BUTTON_POSITIVE) {
             Intent data = getIntent();
+            DBHelper dbHelper = new DBHelper(getApplicationContext());
+            try {
+                dbHelper.moveToDeletedTable(data);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.w(TAG, "Error: DBHelper could not move the item to deleted table." + e.toString());
+            } finally {
+                dbHelper.closeDB();
+            }
             setResult(RESULT_CODE_DELETE, data);
             finish();
-        } else if (requestCode == RESULT_CODE_COPY && resultCode == DialogInterface.BUTTON_POSITIVE) {
-            Intent data = new OnButtonClickListener(this).addAndUpdateItem(RESULT_CODE_COPY);
-            setResult(RESULT_CODE_COPY, data);
-            finish();
+            //アイテム複製(今回は無効)
+//        } else if (requestCode == RESULT_CODE_COPY && resultCode == DialogInterface.BUTTON_POSITIVE) {
+//            Intent data = new OnButtonClickListener(this).addAndUpdateItem(RESULT_CODE_COPY);
+//            int itemId = 0;
+//            DBHelper dbHelper = new DBHelper(getApplicationContext());
+//            try {
+//                itemId = dbHelper.updateItem(data);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            } finally {
+//                if (dbHelper != null) {
+//                    dbHelper.closeDB();
+//                }
+//            }
+//            if (data.getIntExtra("itemId", 0) == 0) {
+//                data.removeExtra("itemId");
+//                data.putExtra("itemId", itemId);
+//            }
+//            setResult(RESULT_CODE_COPY, data);
+//            finish();
         }
     }
 
@@ -225,26 +248,6 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
     public void onMyDialogCancelled(int requestCode, Bundle params) {
 
     }
-
-//    private class OnEditTextFocusChangeListener implements View.OnFocusChangeListener {
-//
-//        private EditText _source1;
-//        private EditText _source2;
-//        private EditText _target;
-//
-//        public OnEditTextFocusChangeListener(EditText source1, EditText source2, EditText target) {
-//            _source1 = source1;
-//            _source2 = source2;
-//            _target = target;
-//        }
-//
-//        @Override
-//        public void onFocusChange(View v, boolean hasFocus) {
-//            if (!hasFocus) {
-//                _target.setText(String.format("%,d", Integer.parseInt(_source1.getText().toString()) * Integer.parseInt(_source2.getText().toString())));
-//            }
-//        }
-//    }
 
     /**
      * 「数量」「単価」の各EditTextを常時監視するクラス
@@ -298,24 +301,42 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         /**
          * ボタンの位置により挙動が変化
          * 画面右端(新規or更新)と項目移動 … 画面部品上の記述内容に基づくIntentを新規生成の上、
-         *   setResult()によりその後の処理を呼び出し元へ移譲
+         * setResult()によりその後の処理を呼び出し元へ移譲
          * 項目削除とリスト間移動 … 画面部品上の記述内容に基づくBundleを新規生成の上、
-         *   GeneralDialogFragmentにその後の処理を移譲
+         * GeneralDialogFragmentにその後の処理を移譲
+         *
          * @param v :各ボタンのスーパークラス
          */
         @Override
         public void onClick(View v) {
             switch (v.getId()) {
+                //アイテム情報更新・追加
                 case R.id.btReply:
                     Intent data = addAndUpdateItem(0);
+                    int itemId = 0;
+                    DBHelper dbHelper = new DBHelper(getApplicationContext());
+                    try {
+                        itemId = dbHelper.updateItem(data);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (dbHelper != null) {
+                            dbHelper.closeDB();
+                        }
+                    }
+                    //DB書き込み時の戻り値が0 →新規追加。dataに戻り値のitemIdを格納
+                    if (data.getIntExtra("itemId", 0) == 0) {
+                        data.removeExtra("itemId");
+                        data.putExtra("itemId", itemId);
+                    }
                     setResult(RESULT_OK, data);
                     finish();
                     break;
-                case R.id.btMove:
-                    data = addAndUpdateItem(RESULT_CODE_MOVE);
-                    setResult(RESULT_CODE_MOVE, data);
-                    finish();
-                    break;
+//                case R.id.btMove:
+//                    data = addAndUpdateItem(RESULT_CODE_MOVE);
+//                    setResult(RESULT_CODE_MOVE, data);
+//                    finish();
+//                    break;
                 case R.id.btDelete:
                     Bundle extras = getIntent().getExtras();
                     new GeneralDialogFragment.Builder(mActivity)
@@ -326,31 +347,28 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
                             .negative(R.string.cancel)
                             .show();
                     break;
-                case R.id.btCopyItem:
-                    new GeneralDialogFragment.Builder(mActivity)
-                            .title(R.string.attention)
-                            .message(getString(R.string.alert_copy))
-                            .requestCode(RESULT_CODE_COPY)
-                            .positive(R.string.reply_copy)
-                            .negative(R.string.cancel)
-                            .show();
+//                case R.id.btCopyItem:
+//                    new GeneralDialogFragment.Builder(mActivity)
+//                            .title(R.string.attention)
+//                            .message(getString(R.string.alert_copy))
+//                            .requestCode(RESULT_CODE_COPY)
+//                            .positive(R.string.reply_copy)
+//                            .negative(R.string.cancel)
+//                            .show();
             }
         }
 
         /**
          * 項目の新規作成/更新/移動時のsetResult()用Intentを生成
+         *
          * @param copyCheck :リクエストコードの格納内容を判定させるコード
          * @return data :setResult()の引数に格納するためのIntentインスタンス
          */
         public Intent addAndUpdateItem(int copyCheck) {
             Intent intent = getIntent();
             Intent data = new Intent();
-            if (copyCheck == RESULT_CODE_COPY || copyCheck == RESULT_CODE_MOVE) {
-                data.putExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE);
-            } else {
-                data.putExtra("requestCode", intent.getIntExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE));
-            }
             data.putExtra("hasGot", mCbHasGot.isChecked());
+            data.putExtra("order", intent.getIntExtra("order", 0));
             data.putExtra("name", mEtItemName.getText().toString());
             data.putExtra("amount", Integer.parseInt(mEtItemAmount.getText().toString()));
             data.putExtra("price", Integer.parseInt(mEtItemPrice.getText().toString()));
@@ -358,6 +376,20 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
             data.putExtra("description", mEtComment.getText().toString());
             data.putExtra("createDate", intent.getLongExtra("createDate", System.currentTimeMillis()));
             data.putExtra("lastUpdateDate", System.currentTimeMillis());
+            if (copyCheck == RESULT_CODE_COPY || copyCheck == RESULT_CODE_MOVE) {
+                data.putExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE);
+                if (copyCheck == RESULT_CODE_COPY) {
+                    data.putExtra("itemId", 0);
+                    data.putExtra("listId", intent.getIntExtra("listId", 0));
+                } else {
+                    data.putExtra("itemId", intent.getIntExtra("itemId", 0));
+                    data.putExtra("listId", 0);
+                }
+            } else {
+                data.putExtra("requestCode", intent.getIntExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE));
+                data.putExtra("itemId", intent.getIntExtra("itemId", 0));
+                data.putExtra("listId", intent.getIntExtra("listId", 0));
+            }
             return data;
         }
     }

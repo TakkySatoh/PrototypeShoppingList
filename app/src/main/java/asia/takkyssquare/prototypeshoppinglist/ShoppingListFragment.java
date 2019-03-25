@@ -15,6 +15,7 @@ import android.widget.Toast;
 import java.util.List;
 
 import asia.takkyssquare.prototypeshoppinglist.ShoppingItemContent.ShoppingItem;
+
 /**
  * A fragment representing a list of Items.
  * <p/>
@@ -27,7 +28,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     private static final String ARG_COLUMN_COUNT = "column-count";
     // TODO: Customize parameters
     private int mColumnCount = 1;
-    private String listId;
+    private int listId;
     private OnListFragmentInteractionListener mListener;
 
     private ItemRecyclerViewAdapter mRVAdapter;
@@ -60,7 +61,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
 
-        listId = getTag();
+        listId = Integer.parseInt(getTag());
     }
 
     @Override
@@ -73,7 +74,9 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
          */
         Bundle args = getArguments();
         String listName = args.getString("listName");
-        int listId = args.getInt("_id",0);
+        if (listId == 0) {
+            listId = args.getInt("_id");
+        }
 
         View view = inflater.inflate(R.layout.fragment_shopping_list, container, false);
         Context context = view.getContext();
@@ -84,11 +87,11 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
          */
         RecyclerView rvItemList = view.findViewById(R.id.rvItemList);
         rvItemList.setLayoutManager(new LinearLayoutManager(context));
-        if (listName.equals("サンプル")) {
-            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().createSampleItemList(10, listName), false, mListener, this, this);
-        } else {
-            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(getContext(),listId), false, mListener, this, this);
-        }
+//        if (listName.equals("サンプル")) {
+//            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().createSampleItemList(10, listName), false, mListener, this, this);
+//        } else {
+            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(getContext(), listId), false, mListener, this, this);
+//        }
         mRVAdapter.setOnItemClickListener(this);
         rvItemList.setAdapter(mRVAdapter);
 
@@ -212,8 +215,9 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
      * ItemRecyclerViewAdapter.OnItemClickListenerの抽象メソッドの実装
      * RecyclerViewの項目タップ時の挙動を定義
      * 受け取った引数を元に、対象アイテムの詳細情報表示・編集用Activityを呼び出す
-     * @param item :対象アイテムの情報を格納するJava Beansのインスタンス
-     * @param position :タップされた位置情報
+     *
+     * @param item        :対象アイテムの情報を格納するJava Beansのインスタンス
+     * @param position    :タップされた位置情報
      * @param requestCode :リクエストコード
      */
     @Override
@@ -223,6 +227,15 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         intent.putExtra("requestCode", requestCode);
         if (item != null) {
             intent.putExtra("hasGot", item.isHasGot());
+            if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE) {
+                intent.putExtra("itemId", 0);
+                intent.putExtra("listId", listId);
+                intent.putExtra("order", 0);
+            } else {
+                intent.putExtra("itemId", item.getItemId());
+                intent.putExtra("listId", item.getListId());
+                intent.putExtra("order", item.getOrder());
+            }
             intent.putExtra("name", item.getName());
             intent.putExtra("amount", item.getAmount());
             intent.putExtra("price", item.getPrice());
@@ -238,10 +251,10 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
      * 上記Activity呼び出し後の処理を記述
      * リクエストコードとリザルトコードにより処理分岐
      * 主な流れ … 引数のIntentインスタンスを元にItemインスタンスを生成
-     *  → アイテム新規生成時はRecyclerViewの「購入予定の末尾」または「購入済の先頭」、
-     *    アイテム情報更新時は該当箇所+1番目にitemを挿入
-     *  → アイテム情報更新時、アイテム削除時は該当箇所のitemをRecyclerViewより削除
-     *  ※アイテムのリスト間移動時は、リスナを通じて処理を親Activityへ委譲する
+     * → アイテム新規生成時はRecyclerViewの「購入予定の末尾」または「購入済の先頭」、
+     * アイテム情報更新時は該当箇所+1番目にitemを挿入
+     * → アイテム情報更新時、アイテム削除時は該当箇所のitemをRecyclerViewより削除
+     * ※アイテムのリスト間移動時は、リスナを通じて処理を親Activityへ委譲する
      */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -280,7 +293,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_MOVE) {
             if (data != null) {
                 ShoppingItem newItem = new ShoppingItemContent().createItem(data);
-                mListener.onListFragmentInteraction(newItem,resultCode);
+                mListener.onListFragmentInteraction(newItem, resultCode);
 //                new GeneralDialogFragment.Builder(this)
 //                        .title(R.string.alert_move_to)
 //                        .items(MainActivity.mListNameList.toArray(new String[MainActivity.mListNameList.size()]))
