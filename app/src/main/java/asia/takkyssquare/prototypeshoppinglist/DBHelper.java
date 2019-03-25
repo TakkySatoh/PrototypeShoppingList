@@ -166,6 +166,34 @@ public class DBHelper extends ContextWrapper {
         return itemId;
     }
 
+    public int updateItem(ShoppingItem item){
+        boolean isCreate = false;
+        ContentValues values = new ContentValues();
+        values.put("create_at", item.getCreateDate());
+        int itemId = item.getItemId();
+        if (itemId == 0) {
+            isCreate = true;
+            itemId = (int) mySQLiteDatabase.insert(DBOpenHelper.ITEM_INDEX, null, values);
+        }
+        if (item.isHasGot()) {
+            values.put("has_got", 1);
+        } else {
+            values.put("has_got", 0);
+        }
+        values.put("update_at", item.getLastUpdateDate());
+        values.put("name", item.getName());
+        values.put("amount", item.getAmount());
+        values.put("price", item.getPrice());
+        values.put("place", item.getPlace());
+        values.put("comment", item.getDescription());
+        if (isCreate && itemId != -1) {
+            itemId = (int) mySQLiteDatabase.insert(DBOpenHelper.ITEM_ACTIVE, null, values);
+        } else {
+            mySQLiteDatabase.update(DBOpenHelper.ITEM_ACTIVE, values, "_id = ?", new String[]{Integer.toString(itemId)});
+        }
+        return itemId;
+    }
+
     public List<ShoppingItem> createSampleItemList(int listId){
         List<ShoppingItem> itemIndex = new ArrayList<>();
         return itemIndex;

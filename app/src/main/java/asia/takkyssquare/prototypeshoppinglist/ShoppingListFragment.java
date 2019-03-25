@@ -213,6 +213,18 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         ShoppingItem item = mRVAdapter.removeItem(position);
         item.setHasGot(hasGot);
         mRVAdapter.addItem(getContext(), item, item.isHasGot(), -1);
+        DBHelper dbHelper = new DBHelper(getContext());
+        try {
+            dbHelper.updateItem(item);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(DBHelper.TAG,"Error: DBHelper could not update has_got status."+e.toString());
+        } finally {
+            if (dbHelper != null) {
+                dbHelper.closeDB();
+                Log.d(DBHelper.TAG,"Completed: DBHelper finished to update has_got status!");
+            }
+        }
     }
 
     /**
