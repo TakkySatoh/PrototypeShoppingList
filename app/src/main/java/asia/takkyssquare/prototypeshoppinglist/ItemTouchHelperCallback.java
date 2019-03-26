@@ -37,13 +37,18 @@ class ItemTouchHelperCallback extends ItemTouchHelper.Callback {
     //            ViewHolderがドラッグされた場合の動作 (viewTypeが「購入予定」の場合のみ有効)
     @Override
     public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder source, @NonNull RecyclerView.ViewHolder target) {
+//                稼働条件 … 「購入予定」の位置にあるItemViewHolderのインスタンスが上または下方向にドラッグされた場合
+        if (source.getItemViewType() == ItemRecyclerViewAdapter.VIEW_TYPE_ITEM_TO_BUY && target.getItemViewType() == ItemRecyclerViewAdapter.VIEW_TYPE_ITEM_TO_BUY) {
 //                ViewHolderの移動内容を通知
-        final int fromPosition = source.getAdapterPosition();
-        final int toPosition = target.getAdapterPosition();
+            final int fromPosition = source.getAdapterPosition();
+            final int toPosition = target.getAdapterPosition();
 //                ViewHolderの要素(Map型インスタンス)をListより取り出し、その要素を削除
 //                削除したインスタンスを一時変数に格納の上、ドロップした箇所に挿入
-        mAdapter.onItemMove(fromPosition, toPosition);
-        return true;
+            mAdapter.onItemMove(fromPosition, toPosition);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     //            ドラッグされている最中のViewHolderの挙動
