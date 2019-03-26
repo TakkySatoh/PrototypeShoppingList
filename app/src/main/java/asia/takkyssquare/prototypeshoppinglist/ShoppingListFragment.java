@@ -91,11 +91,11 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
          */
         RecyclerView rvItemList = view.findViewById(R.id.rvItemList);
         rvItemList.setLayoutManager(new LinearLayoutManager(context));
-//        if (listName.equals("サンプル")) {
-//            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().createSampleItemList(10, listName), false, mListener, this, this);
-//        } else {
+        if (listName.equals("サンプル")) {
+            mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().createSampleItemList(getContext(),listId,10, listName), false, mListener, this, this);
+        } else {
         mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(getContext(), listId), false, mListener, this, this);
-//        }
+        }
         mRVAdapter.setOnItemClickListener(this);
         rvItemList.setAdapter(mRVAdapter);
 
@@ -212,7 +212,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
     public void moveItemBetweenRecyclerViews(boolean hasGot, int position) {
         ShoppingItem item = mRVAdapter.removeItem(position);
         item.setHasGot(hasGot);
-        mRVAdapter.addItem(getContext(), item, item.isHasGot(), -1);
+        mRVAdapter.addItem(item, item.isHasGot(), -1);
         DBHelper dbHelper = new DBHelper(getContext());
         try {
             dbHelper.updateItem(item);
@@ -242,27 +242,27 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         Intent intent = new Intent(getActivity(), ShoppingItemEditorActivity.class);
         intent.putExtra("requestCode", requestCode);
         if (item != null) {
-            intent.putExtra("hasGot", item.isHasGot());
+            intent.putExtra(DBOpenHelper.HAS_GOT, item.isHasGot());
 //            if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE) {
 //                intent.putExtra("itemId", 0);
 //                intent.putExtra("listId", listId);
 //                intent.putExtra("order", 0);
 //            } else {
-            intent.putExtra("itemId", item.getItemId());
-            intent.putExtra("listId", item.getListId());
-            intent.putExtra("order", item.getOrder());
+            intent.putExtra(DBOpenHelper.ITEM_ID, item.getItemId());
+            intent.putExtra(DBOpenHelper.LIST_ID, item.getListId());
+            intent.putExtra(DBOpenHelper.ORDER, item.getOrder());
 //            }
-            intent.putExtra("name", item.getName());
-            intent.putExtra("amount", item.getAmount());
-            intent.putExtra("price", item.getPrice());
-            intent.putExtra("place", item.getPlace());
-            intent.putExtra("description", item.getDescription());
-            intent.putExtra("createDate", item.getCreateDate());
-            intent.putExtra("lastUpdateDate", item.getLastUpdateDate());
+            intent.putExtra(DBOpenHelper.NAME, item.getName());
+            intent.putExtra(DBOpenHelper.AMOUNT, item.getAmount());
+            intent.putExtra(DBOpenHelper.PRICE, item.getPrice());
+            intent.putExtra(DBOpenHelper.PLACE, item.getPlace());
+            intent.putExtra(DBOpenHelper.COMMENT, item.getComment());
+            intent.putExtra(DBOpenHelper.CREATE_AT, item.getCreateAt());
+            intent.putExtra(DBOpenHelper.UPDATE_AT, item.getUpdateAt());
         } else {
-            intent.putExtra("itemId", 0);
-            intent.putExtra("listId", listId);
-            intent.putExtra("order", 0);
+            intent.putExtra(DBOpenHelper.ITEM_ID, 0);
+            intent.putExtra(DBOpenHelper.LIST_ID, listId);
+            intent.putExtra(DBOpenHelper.ORDER, 0);
         }
         startActivityForResult(intent, requestCode);
     }
@@ -283,7 +283,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         if ((requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_CREATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) || resultCode == ShoppingItemEditorActivity.RESULT_CODE_COPY) {  // 新規アイテム追加・複製
             if (data != null) {
                 ShoppingItem newItem = new ShoppingItemContent().createItem(data);
-                mRVAdapter.addItem(getContext(), newItem, newItem.isHasGot(), -1);
+                mRVAdapter.addItem(newItem, newItem.isHasGot(), -1);
                 DBHelper dbHelper = new DBHelper(getContext());
                 try {
                     dbHelper.updateOrder(newItem);
@@ -295,7 +295,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                         dbHelper.closeDB();
                     }
                 }
-                Toast.makeText(getActivity(), data.getStringExtra("name") + "を追加しました", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), data.getStringExtra(DBOpenHelper.NAME) + "を追加しました", Toast.LENGTH_LONG).show();
             }
         } else if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {  //アイテムデータ更新
             if (data != null) {
@@ -303,10 +303,10 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                 boolean hasGot;
                 if (mRVAdapter.getItemList().get(mPosition).isHasGot() == newItem.isHasGot()) {
                     //購入済フラグ書き換え無し…更新対象アイテムの一つ下に更新済アイテムを追加
-                    hasGot = mRVAdapter.addItem(getContext(), newItem, newItem.isHasGot(), mPosition + 1);
+                    hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(), mPosition + 1);
                 } else {
                     //購入済フラグ書き換え有り…各々の新規アイテム追加位置にアイテムを追加
-                    hasGot = mRVAdapter.addItem(getContext(), newItem, newItem.isHasGot(), -1);
+                    hasGot = mRVAdapter.addItem(newItem, newItem.isHasGot(), -1);
                     if (!newItem.isHasGot()) {
                         mRVAdapter.sortItems();
                     }
@@ -329,7 +329,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                         dbHelper.closeDB();
                     }
                 }
-                Toast.makeText(getActivity(), data.getStringExtra("name") + "を更新しました", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), data.getStringExtra(DBOpenHelper.NAME) + "を更新しました", Toast.LENGTH_LONG).show();
             }
         } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_DELETE) {   //アイテム削除
             if (data != null) {
@@ -345,7 +345,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                         dbHelper.closeDB();
                     }
                 }
-                Toast.makeText(getActivity(), data.getStringExtra("name") + "を削除しました", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), data.getStringExtra(DBOpenHelper.NAME) + "を削除しました", Toast.LENGTH_LONG).show();
             }
 //        } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_MOVE) {
 //            if (data != null) {

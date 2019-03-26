@@ -39,7 +39,7 @@ public class DBHelper extends ContextWrapper {
                 (tableName, null, null, null, null, null, "update_at desc", null)) {
             if (cursor != null && cursor.moveToFirst()) {
                 do {
-                    String listName = cursor.getString(cursor.getColumnIndex("name"));
+                    String listName = cursor.getString(cursor.getColumnIndex(DBOpenHelper.NAME));
                     listIndex.add(listName);
                 } while (cursor.moveToNext());
             } else {
@@ -69,21 +69,21 @@ public class DBHelper extends ContextWrapper {
             if (cursor != null && cursor.moveToFirst()) {
                 do {
                     boolean hasGot = false;
-                    if (cursor.getLong(cursor.getColumnIndex("has_got")) == DBOpenHelper.YES) {
+                    if (cursor.getLong(cursor.getColumnIndex(DBOpenHelper.HAS_GOT)) == DBOpenHelper.YES) {
                         hasGot = true;
                     }
                     item = new ShoppingItem(
                             hasGot,
-                            cursor.getInt(cursor.getColumnIndex("item_id")),
-                            cursor.getInt(cursor.getColumnIndex("list_id")),
-                            cursor.getInt(cursor.getColumnIndex("order_number")),
-                            cursor.getString(cursor.getColumnIndex("name")),
-                            cursor.getInt(cursor.getColumnIndex("amount")),
-                            cursor.getInt(cursor.getColumnIndex("price")),
-                            cursor.getString(cursor.getColumnIndex("comment")),
-                            cursor.getString(cursor.getColumnIndex("place")),
-                            cursor.getLong(cursor.getColumnIndex("create_at")),
-                            cursor.getLong(cursor.getColumnIndex("update_at")));
+                            cursor.getInt(cursor.getColumnIndex(DBOpenHelper.ITEM_ID)),
+                            cursor.getInt(cursor.getColumnIndex(DBOpenHelper.LIST_ID)),
+                            cursor.getInt(cursor.getColumnIndex(DBOpenHelper.ORDER)),
+                            cursor.getString(cursor.getColumnIndex(DBOpenHelper.NAME)),
+                            cursor.getInt(cursor.getColumnIndex(DBOpenHelper.AMOUNT)),
+                            cursor.getInt(cursor.getColumnIndex(DBOpenHelper.PRICE)),
+                            cursor.getString(cursor.getColumnIndex(DBOpenHelper.COMMENT)),
+                            cursor.getString(cursor.getColumnIndex(DBOpenHelper.PLACE)),
+                            cursor.getLong(cursor.getColumnIndex(DBOpenHelper.CREATE_AT)),
+                            cursor.getLong(cursor.getColumnIndex(DBOpenHelper.UPDATE_AT)));
                     itemIndex.add(item);
                     if (!item.isHasGot()) {
                         toBuyAmount++;
@@ -113,19 +113,20 @@ public class DBHelper extends ContextWrapper {
     public int updateListIndex(String oldListName, String newListName) {
         int count = 0;
         ContentValues values = new ContentValues();
-        values.put("update_at", System.currentTimeMillis());
+        values.put(DBOpenHelper.UPDATE_AT, System.currentTimeMillis());
         if (oldListName != null) {
-            values.put("name", newListName);
+            values.put(DBOpenHelper.NAME, newListName);
             count = mySQLiteDatabase.update
                     (DBOpenHelper.LIST_ACTIVE, values, "name = ?", new String[]{oldListName});
         } else {
             count = mySQLiteDatabase.update
                     (DBOpenHelper.LIST_ACTIVE, values, "name = ?", new String[]{newListName});
+            values.put(DBOpenHelper.NAME, newListName);
         }
         if (count == 0) {
             ContentValues newValues = new ContentValues();
             newValues.put("_id", getCount(DBOpenHelper.LIST_INDEX) + 1);
-            newValues.put("create_at", values.getAsLong("update_at"));
+            newValues.put(DBOpenHelper.CREATE_AT, values.getAsLong(DBOpenHelper.UPDATE_AT));
             count = (int) mySQLiteDatabase.insert(DBOpenHelper.LIST_INDEX, null, newValues);
             Log.d(TAG, "Completed: the list [" + newListName + "] add the table on the table [" + DBOpenHelper.ITEM_INDEX + "!");
             newValues.putAll(values);
@@ -137,27 +138,27 @@ public class DBHelper extends ContextWrapper {
         return count;
     }
 
-    //アイテム情報更新・新規追加
+    //アイテム情報更新・新規追加(アイテム詳細画面からの操作)
     public int updateItem(Intent data) {
         boolean isCreate = false;
         ContentValues values = new ContentValues();
-        values.put("create_at", data.getLongExtra("create_at", 0));
-        int itemId = data.getIntExtra("itemId", 0);
+        values.put(DBOpenHelper.CREATE_AT, data.getLongExtra(DBOpenHelper.CREATE_AT, 0));
+        int itemId = data.getIntExtra(DBOpenHelper.ITEM_ID, 0);
         if (itemId == 0) {
             isCreate = true;
             itemId = (int) mySQLiteDatabase.insert(DBOpenHelper.ITEM_INDEX, null, values);
         }
-        if (data.getBooleanExtra("hasGot", false)) {
-            values.put("has_got", 1);
+        if (data.getBooleanExtra(DBOpenHelper.HAS_GOT, false)) {
+            values.put(DBOpenHelper.HAS_GOT, 1);
         } else {
-            values.put("has_got", 0);
+            values.put(DBOpenHelper.HAS_GOT, 0);
         }
-        values.put("update_at", data.getLongExtra("update_at", 0));
-        values.put("name", data.getStringExtra("name"));
-        values.put("amount", data.getIntExtra("amount", 0));
-        values.put("price", data.getIntExtra("price", 0));
-        values.put("place", data.getStringExtra("place"));
-        values.put("comment", data.getStringExtra("comment"));
+        values.put(DBOpenHelper.UPDATE_AT, data.getLongExtra(DBOpenHelper.UPDATE_AT, 0));
+        values.put(DBOpenHelper.NAME, data.getStringExtra(DBOpenHelper.NAME));
+        values.put(DBOpenHelper.AMOUNT, data.getIntExtra(DBOpenHelper.AMOUNT, 0));
+        values.put(DBOpenHelper.PRICE, data.getIntExtra(DBOpenHelper.PRICE, 0));
+        values.put(DBOpenHelper.PLACE, data.getStringExtra(DBOpenHelper.PLACE));
+        values.put(DBOpenHelper.COMMENT, data.getStringExtra(DBOpenHelper.COMMENT));
         if (isCreate && itemId != -1) {
             itemId = (int) mySQLiteDatabase.insert(DBOpenHelper.ITEM_ACTIVE, null, values);
         } else {
@@ -166,26 +167,27 @@ public class DBHelper extends ContextWrapper {
         return itemId;
     }
 
-    public int updateItem(ShoppingItem item){
+    //アイテム情報更新・新規追加(アイテム一覧からの操作)
+    public int updateItem(ShoppingItem item) {
         boolean isCreate = false;
         ContentValues values = new ContentValues();
-        values.put("create_at", item.getCreateDate());
+        values.put(DBOpenHelper.CREATE_AT, item.getCreateAt());
         int itemId = item.getItemId();
         if (itemId == 0) {
             isCreate = true;
             itemId = (int) mySQLiteDatabase.insert(DBOpenHelper.ITEM_INDEX, null, values);
         }
         if (item.isHasGot()) {
-            values.put("has_got", 1);
+            values.put(DBOpenHelper.HAS_GOT, 1);
         } else {
-            values.put("has_got", 0);
+            values.put(DBOpenHelper.HAS_GOT, 0);
         }
-        values.put("update_at", item.getLastUpdateDate());
-        values.put("name", item.getName());
-        values.put("amount", item.getAmount());
-        values.put("price", item.getPrice());
-        values.put("place", item.getPlace());
-        values.put("comment", item.getDescription());
+        values.put(DBOpenHelper.UPDATE_AT, item.getUpdateAt());
+        values.put(DBOpenHelper.NAME, item.getName());
+        values.put(DBOpenHelper.AMOUNT, item.getAmount());
+        values.put(DBOpenHelper.PRICE, item.getPrice());
+        values.put(DBOpenHelper.PLACE, item.getPlace());
+        values.put(DBOpenHelper.COMMENT, item.getComment());
         if (isCreate && itemId != -1) {
             itemId = (int) mySQLiteDatabase.insert(DBOpenHelper.ITEM_ACTIVE, null, values);
         } else {
@@ -194,9 +196,36 @@ public class DBHelper extends ContextWrapper {
         return itemId;
     }
 
-    public List<ShoppingItem> createSampleItemList(int listId){
-        List<ShoppingItem> itemIndex = new ArrayList<>();
-        return itemIndex;
+    //サンプルデータ生成
+    public List<ShoppingItem> createSampleItemList(int count, String place) {
+        int listId = getListId(place);
+        List<ShoppingItem> itemList = new ArrayList<>();
+        itemList.add(new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
+        for (int i = 0; i < count; i++) {
+            ShoppingItem item = new ShoppingItem(
+                    false,
+                    0,
+                    listId,
+                    0,
+                    "アイテム" + (i + 1),
+                    1,
+                    100,
+                    "これはアイテム" + (i + 1) + "です",
+                    place,
+                    System.currentTimeMillis(),
+                    System.currentTimeMillis());
+            itemList.add(item);
+            if (i >= count / 2) {
+                itemList.get(i + 1).setHasGot(true);
+            }
+            int itemId = updateItem(itemList.get(i + 1));
+            itemList.get(i + 1).setItemId(itemId);
+            itemList.get(i + 1).setOrder(itemId);
+            updateOrder(itemList.get(i + 1));
+        }
+        itemList.add(count / 2 + 1, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_FOOTER));
+        itemList.add(count / 2 + 2, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
+        return itemList;
     }
 
     //並び順データ更新・新規追加
@@ -204,11 +233,11 @@ public class DBHelper extends ContextWrapper {
         int count = 0;
         int itemId = item.getItemId();
         ContentValues values = new ContentValues();
-        values.put("order_number", item.getOrder());
+        values.put(DBOpenHelper.ORDER, item.getOrder());
         count = mySQLiteDatabase.update(DBOpenHelper.ORDER_INDEX, values, "item_id = ?", new String[]{Integer.toString(itemId)});
         if (count == 0) {
-            values.put("item_id", itemId);
-            values.put("list_id", item.getListId());
+            values.put(DBOpenHelper.ITEM_ID, itemId);
+            values.put(DBOpenHelper.LIST_ID, item.getListId());
             count = (int) mySQLiteDatabase.insert(DBOpenHelper.ORDER_INDEX, null, values);
             if (count == 0) {
                 Log.w(TAG, "Error: DBHelper could not insert new order data.");
@@ -227,7 +256,7 @@ public class DBHelper extends ContextWrapper {
             if (cursor != null && cursor.moveToFirst()) {
                 do {
                     values.put("_id", cursor.getLong(cursor.getColumnIndex("_id")));
-                    values.put("create_at", cursor.getLong(cursor.getColumnIndex("create_at")));
+                    values.put(DBOpenHelper.CREATE_AT, cursor.getLong(cursor.getColumnIndex(DBOpenHelper.CREATE_AT)));
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
@@ -251,7 +280,7 @@ public class DBHelper extends ContextWrapper {
             if (cursor != null && cursor.moveToFirst()) {
                 do {
                     values.put("_id", cursor.getLong(cursor.getColumnIndex("_id")));
-                    values.put("create_at", cursor.getLong(cursor.getColumnIndex("create_at")));
+                    values.put(DBOpenHelper.CREATE_AT, cursor.getLong(cursor.getColumnIndex(DBOpenHelper.CREATE_AT)));
                 } while (cursor.moveToNext());
             }
         } catch (Exception e) {
@@ -355,19 +384,19 @@ public class DBHelper extends ContextWrapper {
     }
 
     public void beginTransaction() {
-        if(mySQLiteDatabase != null){
+        if (mySQLiteDatabase != null) {
             mySQLiteDatabase.beginTransaction();
         }
     }
 
     public void setTransactionSuccessful() {
-        if(mySQLiteDatabase != null){
+        if (mySQLiteDatabase != null) {
             mySQLiteDatabase.setTransactionSuccessful();
         }
     }
 
     public void endTransaction() {
-        if (mySQLiteDatabase != null){
+        if (mySQLiteDatabase != null) {
             mySQLiteDatabase.endTransaction();
         }
     }

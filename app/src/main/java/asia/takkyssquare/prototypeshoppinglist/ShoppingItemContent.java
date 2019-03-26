@@ -31,43 +31,37 @@ public class ShoppingItemContent {
         return itemList;
     }
 
-    public List<ShoppingItem> createSampleItemList(int count, String place) {
-        itemList.add(new ShoppingItem(CONTENT_TYPE_HEADER));
-        for (int i = 0; i < count; i++) {
-            itemList.add(new ShoppingItem(
-                    false,
-                    count,
-                    0,
-                    count,
-                    "アイテム" + (i + 1),
-                    1,
-                    100,
-                    "これはアイテム" + (i + 1) + "です",
-                    place,
-                    System.currentTimeMillis(),
-                    System.currentTimeMillis()));
-            if (i >= count / 2) {
-                itemList.get(i + 1).setHasGot(true);
+    public List<ShoppingItem> createSampleItemList(Context context, int listId, int count, String place) {
+        DBHelper dbHelper = new DBHelper(context);
+        try {
+            itemList = dbHelper.readItemList(listId);
+            if (itemList.size() == 0) {
+                itemList = dbHelper.createSampleItemList(count, place);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(DBHelper.TAG, "Error: You could not get sample list. " + e.toString());
+        } finally {
+            if (dbHelper != null) {
+                dbHelper.closeDB();
             }
         }
-        itemList.add(count / 2 + 1, new ShoppingItem(CONTENT_TYPE_FOOTER));
-        itemList.add(count / 2 + 2, new ShoppingItem(CONTENT_TYPE_HEADER));
         return itemList;
     }
 
     public ShoppingItem createItem(Intent data) {
         ShoppingItem newItem = new ShoppingItem(
-                data.getBooleanExtra("hasGot", false),
-                data.getIntExtra("itemId", 0),
-                data.getIntExtra("listId", 0),
-                data.getIntExtra("order", 0),
-                data.getStringExtra("name"),
-                data.getIntExtra("amount", 0),
-                data.getIntExtra("price", 0),
-                data.getStringExtra("description"),
-                data.getStringExtra("place"),
-                data.getLongExtra("createDate", System.currentTimeMillis()),
-                data.getLongExtra("lastUpdateDate", System.currentTimeMillis())
+                data.getBooleanExtra(DBOpenHelper.HAS_GOT, false),
+                data.getIntExtra(DBOpenHelper.ITEM_ID, 0),
+                data.getIntExtra(DBOpenHelper.LIST_ID, 0),
+                data.getIntExtra(DBOpenHelper.ORDER, 0),
+                data.getStringExtra(DBOpenHelper.NAME),
+                data.getIntExtra(DBOpenHelper.AMOUNT, 0),
+                data.getIntExtra(DBOpenHelper.PRICE, 0),
+                data.getStringExtra(DBOpenHelper.COMMENT),
+                data.getStringExtra(DBOpenHelper.PLACE),
+                data.getLongExtra(DBOpenHelper.CREATE_AT, System.currentTimeMillis()),
+                data.getLongExtra(DBOpenHelper.UPDATE_AT, System.currentTimeMillis())
         );
         return newItem;
     }
@@ -82,12 +76,12 @@ public class ShoppingItemContent {
         private String name;
         private int amount;
         private int price;
-        private String description;
+        private String comment;
         private String place;
-        private final long createDate;
-        private long lastUpdateDate;
+        private final long createAt;
+        private long updateAt;
 
-        public ShoppingItem(boolean hasGot, int itemId, int listId, int order, String name, int amount, int price, String description, String place, long createDate, long lastUpdateDate) {
+        public ShoppingItem(boolean hasGot, int itemId, int listId, int order, String name, int amount, int price, String comment, String place, long createAt, long updateAt) {
             this.contentType = CONTENT_TYPE_ITEM;
             this.hasGot = hasGot;
             this.itemId = itemId;
@@ -96,10 +90,15 @@ public class ShoppingItemContent {
             this.name = name;
             this.amount = amount;
             this.price = price;
-            this.description = description;
+            this.comment = comment;
             this.place = place;
-            this.createDate = createDate;
-            this.lastUpdateDate = lastUpdateDate;
+            this.createAt = createAt;
+            this.updateAt = updateAt;
+        }
+
+        public ShoppingItem(int contentType) {
+            this.contentType = contentType;
+            this.createAt = System.currentTimeMillis();
         }
 
         public int getItemId() {
@@ -124,11 +123,6 @@ public class ShoppingItemContent {
 
         public void setOrder(int order) {
             this.order = order;
-        }
-
-        public ShoppingItem(int contentType) {
-            this.contentType = contentType;
-            this.createDate = System.currentTimeMillis();
         }
 
         public int getContentType() {
@@ -171,12 +165,12 @@ public class ShoppingItemContent {
             this.price = price;
         }
 
-        public String getDescription() {
-            return description;
+        public String getComment() {
+            return comment;
         }
 
-        public void setDescription(String description) {
-            this.description = description;
+        public void setComment(String comment) {
+            this.comment = comment;
         }
 
         public String getPlace() {
@@ -187,16 +181,16 @@ public class ShoppingItemContent {
             this.place = place;
         }
 
-        public long getCreateDate() {
-            return createDate;
+        public long getCreateAt() {
+            return createAt;
         }
 
-        public long getLastUpdateDate() {
-            return lastUpdateDate;
+        public long getUpdateAt() {
+            return updateAt;
         }
 
-        public void setLastUpdateDate(long lastUpdateDate) {
-            this.lastUpdateDate = lastUpdateDate;
+        public void setUpdateAt(long updateAt) {
+            this.updateAt = updateAt;
         }
     }
 }

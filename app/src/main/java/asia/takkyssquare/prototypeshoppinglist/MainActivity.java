@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
             if (dbHelper.getCount(DBOpenHelper.LIST_DELETED) != 0) {
                 dbHelper.deleteDB(DBOpenHelper.LIST_DELETED);
             }
-            if (dbHelper.getCount(DBOpenHelper.ITEM_DELETED) != 0){
+            if (dbHelper.getCount(DBOpenHelper.ITEM_DELETED) != 0) {
                 dbHelper.deleteDB(DBOpenHelper.ITEM_DELETED);
             }
             mListNameList = dbHelper.readListIndex(DBOpenHelper.LIST_ACTIVE);
@@ -103,15 +103,17 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         mSpinner.setOnItemSelectedListener(null);
         mSpinner.setSelection(0, false);
         mSpinner.setOnItemSelectedListener(this);
-        DBHelper dbHelper = new DBHelper(getApplicationContext());
-        try {
-            dbHelper.updateListIndex(null,mListNameList.get(0));
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.w(TAG,"Error: DBHelper failed to update updated time of the top list."+e.toString());
-        } finally {
-            if (dbHelper != null) {
-                dbHelper.closeDB();
+        if (!mListNameList.get(0).equals(getString(R.string.spinner_empty))) {
+            DBHelper dbHelper = new DBHelper(getApplicationContext());
+            try {
+                dbHelper.updateListIndex(null, mListNameList.get(0));
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.w(TAG, "Error: DBHelper failed to update updated time of the top list." + e.toString());
+            } finally {
+                if (dbHelper != null) {
+                    dbHelper.closeDB();
+                }
             }
         }
     }
@@ -385,7 +387,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         DBHelper dbHelper = new DBHelper(getApplicationContext());
         try {
             int deletedTableAmount = dbHelper.deleteDB(DBOpenHelper.ITEM_DELETED);
-            Log.d(TAG,"Completed: DBHelper cleaned " + DBOpenHelper.ITEM_DELETED + " table with " + deletedTableAmount + " items!");
+            Log.d(TAG, "Completed: DBHelper cleaned " + DBOpenHelper.ITEM_DELETED + " table with " + deletedTableAmount + " items!");
             deletedTableAmount = dbHelper.deleteDB(DBOpenHelper.LIST_DELETED);
             Log.d(TAG, "Completed: DBHelper cleaned " + DBOpenHelper.LIST_DELETED + " table with " + deletedTableAmount + " lists!");
         } catch (Exception e) {

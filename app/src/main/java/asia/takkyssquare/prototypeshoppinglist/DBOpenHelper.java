@@ -21,6 +21,18 @@ public class DBOpenHelper extends SQLiteOpenHelper {
 
     public static final String ORDER_INDEX = "order_index";
 
+    public static final String LIST_ID = "list_id";
+    public static final String ITEM_ID = "item_id";
+    public static final String ORDER = "order_number";
+    public static final String NAME = "name";
+    public static final String AMOUNT = "amount";
+    public static final String PRICE = "price";
+    public static final String PLACE = "place";
+    public static final String COMMENT = "comment";
+    public static final String HAS_GOT = "has_got";
+    public static final String CREATE_AT = "create_at";
+    public static final String UPDATE_AT = "update_at";
+
     public static final int YES = 1;
     public static final int NO = 0;
 

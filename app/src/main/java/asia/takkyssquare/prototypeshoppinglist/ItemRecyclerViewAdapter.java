@@ -354,7 +354,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
      * 新規かつ購入予定…購入予定行の最後尾 / 新規かつ購入済…購入済み行の先頭
      * それ以外…引数で指定された位置
      */
-    public boolean addItem(Context base, ShoppingItem item, boolean hasGot, int position) {
+    public boolean addItem(ShoppingItem item, boolean hasGot, int position) {
         if (!hasGot) {
             if (position == -1) {
                 position = toBuyItemAmount + 1;
@@ -367,7 +367,8 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             boughtItemAmount++;
         }
         mItemList.add(position, item);
-        notifyItemInserted(position);
+        sortItems();
+//        notifyItemInserted(position);
         notifyDataSetChanged();
         if (hasGot) {
             return true;
@@ -413,8 +414,13 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         for (int i = lower; i <= upper; i++) {
             orders.add(mItemList.get(i).getOrder());
         }
-        Collections.rotate(mItemList.subList(lower, upper + 1), -1);
-        Collections.rotate(orders, -1);
+        if (fromPosition < toPosition) {
+            Collections.rotate(mItemList.subList(lower, upper + 1), -1);
+//            Collections.rotate(orders, -1);
+        } else {
+            Collections.rotate(mItemList.subList(lower, upper + 1), 1);
+//            Collections.rotate(orders, 1);
+        }
         //並び替え時の並びを元に、ShoppingItem.orderを更新の上、DB上の「order_index」も併せて更新
         DBHelper dbHelper = new DBHelper((Context) mListener);
         try {
@@ -436,6 +442,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             }
         }
         notifyItemMoved(fromPosition, toPosition);
+        notifyDataSetChanged();
         return true;
     }
 
@@ -448,6 +455,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                 break;
             }
         }
+        notifyDataSetChanged();
 //        mItemList.sort(new Comparator<ShoppingItem>() {
 //            @Override
 //            public int compare(ShoppingItem item1, ShoppingItem item2) {

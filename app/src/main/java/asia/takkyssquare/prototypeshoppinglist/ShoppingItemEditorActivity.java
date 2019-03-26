@@ -59,14 +59,14 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         Intent intent = getIntent();
         if (intent != null) {
             requestCode = intent.getIntExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE);
-            hasGot = intent.getBooleanExtra("hasGot", false);
-            itemName = intent.getStringExtra("name");
-            amount = intent.getIntExtra("amount", 0);
-            price = intent.getIntExtra("price", 0);
-            place = intent.getStringExtra("place");
-            comment = intent.getStringExtra("description");
-            createDate = intent.getLongExtra("createDate", System.currentTimeMillis());
-            lastUpdateDate = intent.getLongExtra("lastUpdateDate", System.currentTimeMillis());
+            hasGot = intent.getBooleanExtra(DBOpenHelper.HAS_GOT, false);
+            itemName = intent.getStringExtra(DBOpenHelper.NAME);
+            amount = intent.getIntExtra(DBOpenHelper.AMOUNT, 0);
+            price = intent.getIntExtra(DBOpenHelper.PRICE, 0);
+            place = intent.getStringExtra(DBOpenHelper.PLACE);
+            comment = intent.getStringExtra(DBOpenHelper.COMMENT);
+            createDate = intent.getLongExtra(DBOpenHelper.CREATE_AT, System.currentTimeMillis());
+            lastUpdateDate = intent.getLongExtra(DBOpenHelper.UPDATE_AT, System.currentTimeMillis());
         } else {
             createDate = System.currentTimeMillis();
         }
@@ -235,9 +235,9 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
 //                    dbHelper.closeDB();
 //                }
 //            }
-//            if (data.getIntExtra("itemId", 0) == 0) {
-//                data.removeExtra("itemId");
-//                data.putExtra("itemId", itemId);
+//            if (data.getIntExtra(DBOpenHelper.ITEM_ID, 0) == 0) {
+//                data.removeExtra(DBOpenHelper.ITEM_ID);
+//                data.putExtra(DBOpenHelper.ITEM_ID, itemId);
 //            }
 //            setResult(RESULT_CODE_COPY, data);
 //            finish();
@@ -325,11 +325,11 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
                         }
                     }
                     //DB書き込み時の戻り値が0 →新規追加。dataに戻り値のitemIdを格納(itemId, order)
-                    if (data.getIntExtra("itemId", 0) == 0) {
-                        data.removeExtra("itemId");
-                        data.putExtra("itemId", itemId);
-                        data.removeExtra("order");
-                        data.putExtra("order", itemId);
+                    if (data.getIntExtra(DBOpenHelper.ITEM_ID, 0) == 0) {
+                        data.removeExtra(DBOpenHelper.ITEM_ID);
+                        data.putExtra(DBOpenHelper.ITEM_ID, itemId);
+                        data.removeExtra(DBOpenHelper.ORDER);
+                        data.putExtra(DBOpenHelper.ORDER, itemId);
                     }
                     setResult(RESULT_OK, data);
                     finish();
@@ -343,7 +343,7 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
                     Bundle extras = getIntent().getExtras();
                     new GeneralDialogFragment.Builder(mActivity)
                             .title(R.string.attention)
-                            .message(extras.getString("name") + getString(R.string.alert_delete))
+                            .message(extras.getString(DBOpenHelper.NAME) + getString(R.string.alert_delete))
                             .requestCode(RESULT_CODE_DELETE)
                             .positive(R.string.reply_delete)
                             .negative(R.string.cancel)
@@ -369,28 +369,28 @@ public class ShoppingItemEditorActivity extends AppCompatActivity implements Gen
         public Intent addAndUpdateItem(int copyCheck) {
             Intent intent = getIntent();
             Intent data = new Intent();
-            data.putExtra("hasGot", mCbHasGot.isChecked());
-            data.putExtra("order", intent.getIntExtra("order", 0));
-            data.putExtra("name", mEtItemName.getText().toString());
-            data.putExtra("amount", Integer.parseInt(mEtItemAmount.getText().toString()));
-            data.putExtra("price", Integer.parseInt(mEtItemPrice.getText().toString()));
-            data.putExtra("place", mEtPlace.getText().toString());
-            data.putExtra("description", mEtComment.getText().toString());
-            data.putExtra("createDate", intent.getLongExtra("createDate", System.currentTimeMillis()));
-            data.putExtra("lastUpdateDate", System.currentTimeMillis());
+            data.putExtra(DBOpenHelper.HAS_GOT, mCbHasGot.isChecked());
+            data.putExtra(DBOpenHelper.ORDER, intent.getIntExtra(DBOpenHelper.ORDER, 0));
+            data.putExtra(DBOpenHelper.NAME, mEtItemName.getText().toString());
+            data.putExtra(DBOpenHelper.AMOUNT, Integer.parseInt(mEtItemAmount.getText().toString()));
+            data.putExtra(DBOpenHelper.PRICE, Integer.parseInt(mEtItemPrice.getText().toString()));
+            data.putExtra(DBOpenHelper.PLACE, mEtPlace.getText().toString());
+            data.putExtra(DBOpenHelper.COMMENT, mEtComment.getText().toString());
+            data.putExtra(DBOpenHelper.CREATE_AT, intent.getLongExtra(DBOpenHelper.CREATE_AT, System.currentTimeMillis()));
+            data.putExtra(DBOpenHelper.UPDATE_AT, System.currentTimeMillis());
             if (copyCheck == RESULT_CODE_COPY || copyCheck == RESULT_CODE_MOVE) {
                 data.putExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE);
                 if (copyCheck == RESULT_CODE_COPY) {
-                    data.putExtra("itemId", 0);
-                    data.putExtra("listId", intent.getIntExtra("listId", 0));
+                    data.putExtra(DBOpenHelper.ITEM_ID, 0);
+                    data.putExtra(DBOpenHelper.LIST_ID, intent.getIntExtra(DBOpenHelper.LIST_ID, 0));
                 } else {
-                    data.putExtra("itemId", intent.getIntExtra("itemId", 0));
-                    data.putExtra("listId", 0);
+                    data.putExtra(DBOpenHelper.ITEM_ID, intent.getIntExtra(DBOpenHelper.ITEM_ID, 0));
+                    data.putExtra(DBOpenHelper.LIST_ID, 0);
                 }
             } else {
                 data.putExtra("requestCode", intent.getIntExtra("requestCode", ItemRecyclerViewAdapter.REQUEST_CODE_CREATE));
-                data.putExtra("itemId", intent.getIntExtra("itemId", 0));
-                data.putExtra("listId", intent.getIntExtra("listId", 0));
+                data.putExtra(DBOpenHelper.ITEM_ID, intent.getIntExtra(DBOpenHelper.ITEM_ID, 0));
+                data.putExtra(DBOpenHelper.LIST_ID, intent.getIntExtra(DBOpenHelper.LIST_ID, 0));
             }
             return data;
         }
