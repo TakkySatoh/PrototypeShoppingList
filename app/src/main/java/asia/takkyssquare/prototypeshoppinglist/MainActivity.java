@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         mSpinner.setAdapter(mSpAdapter);
         mSpinner.setOnItemSelectedListener(this);
 
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
     }
 
     /**
