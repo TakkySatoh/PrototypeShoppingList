@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "873269818858",
+    "firebase_url": "https://prototypeshoppinglist.firebaseio.com",
+    "project_id": "prototypeshoppinglist",
+    "storage_bucket": "prototypeshoppinglist.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:873269818858:android:3ba681de20975a34",
+        "android_client_info": {
+          "package_name": "asia.takkyssquare.prototypeshoppinglist"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "873269818858-ipg6vrd7e9vdvfobkr7arn4aqfepmiqu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJb3CXPCUBSs73chZAnWABVLqgyarmOeo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

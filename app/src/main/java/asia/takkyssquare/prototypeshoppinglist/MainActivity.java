@@ -21,6 +21,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,6 +82,8 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         mSpAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
         mSpinner.setAdapter(mSpAdapter);
         mSpinner.setOnItemSelectedListener(this);
+
+//        FirebaseFirestore db = FirebaseFirestore.getInstance();
     }
 
     /**
