@@ -394,9 +394,6 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
      */
     @Override
     public boolean onItemMove(int fromPosition, int toPosition) {
-//        ShoppingItem temp = mItemList.remove(fromPosition);
-//        mItemList.add(toPosition, temp);
-//        Collections.swap(mItemList, fromPosition, toPosition);
         int lower = 0;
         int upper = 0;
         if (fromPosition < toPosition) {

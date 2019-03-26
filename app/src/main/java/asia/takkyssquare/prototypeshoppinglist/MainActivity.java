@@ -11,6 +11,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -22,11 +23,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
@@ -35,9 +33,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements ShoppingListFragment.OnListFragmentInteractionListener, AdapterView.OnItemSelectedListener, GeneralDialogFragment.Callback {
 
@@ -46,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
     public static final int FINISH = 999;
 
     public static final String TAG = "DBHelper";
-    public static final String FB = "Firebase";
+    public static final String FIREBASE = "Firebase";
 
     public static List<String> mListNameList = new ArrayList<>();
 
@@ -105,22 +101,8 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
          * 以下、Firestoreのサンプル
          */
         mFirestore = FirebaseFirestore.getInstance();
-        addRegistration();
-//
-//        CollectionReference userRef = db.collection("users");
-//        Task<QuerySnapshot> snapshotTask = userRef.get();
-//        snapshotTask.addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//            @Override
-//            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                if (task.isSuccessful()) {
-//                    for (QueryDocumentSnapshot document : task.getResult()) {
-//                        Log.d(TAG, document.getId() + " => " + document.getData());
-//                    }
-//                } else {
-//                    Log.w(TAG, "Error getting documents.", task.getException());
-//                }
-//            }
-//        });
+//        addRegistration();
+
     }
 
     /**
@@ -255,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
      */
     public void configureList(final int itemId) {
         final EditText etNewListName = new EditText(MainActivity.this);
+        etNewListName.setInputType(InputType.TYPE_CLASS_TEXT);
         String title;
         String positive;
         switch (itemId) {
@@ -354,13 +337,13 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(FB, "List info successfully written!");
+                        Log.d(FIREBASE, "List info successfully written!");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(FB, "Error has happened." + e.toString());
+                        Log.w(FIREBASE, "Error has happened." + e.toString());
                     }
                 });
         updateLastUpdateAt();
@@ -372,13 +355,13 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(FB, "List info successfully deleted!");
+                        Log.d(FIREBASE, "List info successfully deleted!");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(FB, "Error has happened." + e.toString());
+                        Log.w(FIREBASE, "Error has happened." + e.toString());
                     }
                 });
         updateLastUpdateAt();
@@ -482,13 +465,13 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(FB, "DocumentSnapshot successfully deleted!");
+                        Log.d(FIREBASE, "DocumentSnapshot successfully deleted!");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(FB, "Error deleted document." + e.toString());
+                        Log.w(FIREBASE, "Error deleted document." + e.toString());
                     }
                 });
         updateLastUpdateAt();
@@ -508,7 +491,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                     @Override
                     public void onEvent(@javax.annotation.Nullable QuerySnapshot snapshot, @javax.annotation.Nullable FirebaseFirestoreException e) {
                         if (e != null) {
-                            Log.w(FB, "Listen failed.", e);
+                            Log.w(FIREBASE, "Listen failed.", e);
                             return;
                         }
 
@@ -542,7 +525,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                     @Override
                     public void onEvent(@javax.annotation.Nullable QuerySnapshot snapshot, @javax.annotation.Nullable FirebaseFirestoreException e) {
                         if (e != null) {
-                            Log.w(FB, "Listen failed.", e);
+                            Log.w(FIREBASE, "Listen failed.", e);
                             return;
                         }
 
