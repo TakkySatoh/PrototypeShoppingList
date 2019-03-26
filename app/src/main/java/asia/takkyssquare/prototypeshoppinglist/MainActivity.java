@@ -311,8 +311,8 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
             replaceFragment(mListNameList.get(0));
             DBHelper dbHelper = new DBHelper(getApplicationContext());
             try {
-                dbHelper.moveToDeletedTable(listName, DBOpenHelper.LIST_ACTIVE);
                 dbHelper.removeOrder(listName);
+                dbHelper.moveToDeletedTable(listName, DBOpenHelper.LIST_ACTIVE);
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.w(TAG, "Error: DBHelper could not move the list to deleted table." + e.toString());

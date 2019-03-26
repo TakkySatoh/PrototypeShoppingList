@@ -97,9 +97,14 @@ public class DBHelper extends ContextWrapper {
             e.printStackTrace();
             Log.w(TAG, "Error: Reading Item List is failed. " + e.toString());
         }
-        for (int i = 0; i < itemIndex.size(); i++) {
+        int rest = toBuyAmount;
+        int i = 0;
+        while (rest > 0) {
             if (itemIndex.get(i).isHasGot()) {
-                itemIndex.add(toBuyAmount, itemIndex.remove(i));
+                itemIndex.add(itemIndex.size() - 1, itemIndex.remove(i));
+            } else {
+                rest--;
+                i++;
             }
         }
         itemIndex.add(0, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
@@ -200,7 +205,6 @@ public class DBHelper extends ContextWrapper {
     public List<ShoppingItem> createSampleItemList(int count, String place) {
         int listId = getListId(place);
         List<ShoppingItem> itemList = new ArrayList<>();
-        itemList.add(new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
         for (int i = 0; i < count; i++) {
             ShoppingItem item = new ShoppingItem(
                     false,
@@ -216,13 +220,14 @@ public class DBHelper extends ContextWrapper {
                     System.currentTimeMillis());
             itemList.add(item);
             if (i >= count / 2) {
-                itemList.get(i + 1).setHasGot(true);
+                itemList.get(i).setHasGot(true);
             }
-            int itemId = updateItem(itemList.get(i + 1));
-            itemList.get(i + 1).setItemId(itemId);
-            itemList.get(i + 1).setOrder(itemId);
-            updateOrder(itemList.get(i + 1));
+            int itemId = updateItem(itemList.get(i));
+            itemList.get(i).setItemId(itemId);
+            itemList.get(i).setOrder(itemId);
+            updateOrder(itemList.get(i));
         }
+        itemList.add(0, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
         itemList.add(count / 2 + 1, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_FOOTER));
         itemList.add(count / 2 + 2, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
         return itemList;
@@ -275,7 +280,7 @@ public class DBHelper extends ContextWrapper {
     //買い物アイテム削除(削除予定テーブルへ移動)
     public void moveToDeletedTable(Intent data) {
         ContentValues values = new ContentValues();
-        int itemId = data.getIntExtra("itemId", 0);
+        int itemId = data.getIntExtra(DBOpenHelper.ITEM_ID, 0);
         try (Cursor cursor = mySQLiteDatabase.query(DBOpenHelper.ITEM_ACTIVE, null, "_id = ?", new String[]{Integer.toString(itemId)}, null, null, null)) {
             if (cursor != null && cursor.moveToFirst()) {
                 do {
@@ -309,7 +314,7 @@ public class DBHelper extends ContextWrapper {
     //並び順データ削除　オーバーロード
     public void removeOrder(Intent data) {  //アイテム単位
         int count = 0;
-        int itemId = data.getIntExtra("itemId", 0);
+        int itemId = data.getIntExtra(DBOpenHelper.ITEM_ID, 0);
         if (itemId != 0) {
             count = mySQLiteDatabase.delete(DBOpenHelper.ORDER_INDEX, "item_id = ?", new String[]{Integer.toString(itemId)});
         } else {

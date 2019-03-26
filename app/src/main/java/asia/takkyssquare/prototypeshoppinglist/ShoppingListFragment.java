@@ -96,6 +96,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         } else {
         mRVAdapter = new ItemRecyclerViewAdapter(new ShoppingItemContent().getItemList(getContext(), listId), false, mListener, this, this);
         }
+        mRVAdapter.sortItems();
         mRVAdapter.setOnItemClickListener(this);
         rvItemList.setAdapter(mRVAdapter);
 

@@ -35,7 +35,7 @@ public class ShoppingItemContent {
         DBHelper dbHelper = new DBHelper(context);
         try {
             itemList = dbHelper.readItemList(listId);
-            if (itemList.size() == 0) {
+            if (itemList.size() < 4) {
                 itemList = dbHelper.createSampleItemList(count, place);
             }
         } catch (Exception e) {

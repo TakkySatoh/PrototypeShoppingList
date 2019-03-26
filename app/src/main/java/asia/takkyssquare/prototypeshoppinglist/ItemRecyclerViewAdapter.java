@@ -368,7 +368,6 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
         mItemList.add(position, item);
         sortItems();
-//        notifyItemInserted(position);
         notifyDataSetChanged();
         if (hasGot) {
             return true;
@@ -416,17 +415,15 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
         if (fromPosition < toPosition) {
             Collections.rotate(mItemList.subList(lower, upper + 1), -1);
-//            Collections.rotate(orders, -1);
         } else {
             Collections.rotate(mItemList.subList(lower, upper + 1), 1);
-//            Collections.rotate(orders, 1);
         }
         //並び替え時の並びを元に、ShoppingItem.orderを更新の上、DB上の「order_index」も併せて更新
         DBHelper dbHelper = new DBHelper((Context) mListener);
         try {
             dbHelper.beginTransaction();
+            int j = 0;
             for (int i = lower; i <= upper; i++) {
-                int j = 0;
                 mItemList.get(i).setOrder(orders.get(j));
                 dbHelper.updateOrder(mItemList.get(i));
                 j++;
@@ -434,7 +431,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             dbHelper.setTransactionSuccessful();
         } catch (Exception e) {
             e.printStackTrace();
-            Log.w(DBHelper.TAG, "Error: DBHelper could not update order index. "+e.toString());
+            Log.w(DBHelper.TAG, "Error: DBHelper could not update order index. " + e.toString());
         } finally {
             if (dbHelper != null) {
                 dbHelper.endTransaction();
@@ -448,20 +445,27 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     //    @RequiresApi(api = Build.VERSION_CODES.N)
     public void sortItems() {
-        for (int i = toBuyItemAmount; i > 0; i--) {
-            if (mItemList.get(i).getOrder() <= mItemList.get(i - 1).getOrder()) {
-                mItemList.add(i - 1, mItemList.remove(i));
-            } else {
-                break;
+        Collections.sort(mItemList.subList(1, toBuyItemAmount + 1), new Comparator<ShoppingItem>() {
+            @Override
+            public int compare(ShoppingItem item1, ShoppingItem item2) {
+                return item1.getOrder() - item2.getOrder();
             }
-        }
-        notifyDataSetChanged();
-//        mItemList.sort(new Comparator<ShoppingItem>() {
-//            @Override
-//            public int compare(ShoppingItem item1, ShoppingItem item2) {
-//                return item1.getOrder() - item2.getOrder();
+        });
+//        int i = toBuyItemAmount;
+//        while (i > 0) {
+//            if (mItemList.get(i).getOrder() <= mItemList.get(i - 1).getOrder()) {
+//                mItemList.add(i - 1, mItemList.remove(i));
 //            }
-//        });
+//            i--;
+//        }
+//        for (int i = toBuyItemAmount; i > 0; i--) {
+//            if (mItemList.get(i).getOrder() <= mItemList.get(i - 1).getOrder()) {
+//                mItemList.add(i - 1, mItemList.remove(i));
+//            } else {
+//                break;
+//            }
+//        }
+        notifyDataSetChanged();
     }
 
     /**
