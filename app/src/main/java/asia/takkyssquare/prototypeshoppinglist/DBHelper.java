@@ -6,12 +6,11 @@ import android.content.ContextWrapper;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import asia.takkyssquare.prototypeshoppinglist.ShoppingItemContent.ShoppingItem;
 
 public class DBHelper extends ContextWrapper {
 
@@ -255,11 +254,13 @@ public class DBHelper extends ContextWrapper {
     }
 
     //買い物リスト削除(削除予定テーブルへ移動)
-    public void moveToDeletedTable(String listName, String tableNameFrom) {
+    public int moveListToDeletedTable(String listName, String tableNameFrom) {
+        int deletedListId = 0;
         ContentValues values = new ContentValues();
         try (Cursor cursor = mySQLiteDatabase.query(tableNameFrom, null, "name = ?", new String[]{listName}, null, null, null, null)) {
             if (cursor != null && cursor.moveToFirst()) {
                 do {
+                    deletedListId = (int) cursor.getLong(cursor.getColumnIndex("_id"));
                     values.put("_id", cursor.getLong(cursor.getColumnIndex("_id")));
                     values.put(DBOpenHelper.CREATE_AT, cursor.getLong(cursor.getColumnIndex(DBOpenHelper.CREATE_AT)));
                 } while (cursor.moveToNext());
@@ -275,6 +276,7 @@ public class DBHelper extends ContextWrapper {
         } else {
             Log.w(TAG, "Error: the list [" + listName + "] is still alive!");
         }
+        return deletedListId;
     }
 
     //買い物アイテム削除(削除予定テーブルへ移動)
@@ -374,6 +376,48 @@ public class DBHelper extends ContextWrapper {
             Log.w(TAG, "Error: You could not get List_id. " + e.toString());
         }
         return id;
+    }
+
+    public ShoppingList getListInfo(String listName) {
+        int listId = getListId(listName);
+        ShoppingList list = null;
+        try (Cursor cursor = mySQLiteDatabase.query(DBOpenHelper.LIST_ACTIVE, null, "_id = ?", new String[]{Integer.toString(listId)}, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    list = new ShoppingList(
+                            listId,
+                            listName,
+                            cursor.getLong(cursor.getColumnIndex(DBOpenHelper.CREATE_AT)),
+                            cursor.getLong(cursor.getColumnIndex(DBOpenHelper.UPDATE_AT))
+                    );
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG, "Error: You could not get List info." + e.toString());
+        }
+        return list;
+    }
+
+    public ShoppingList getListInfo(int listId) {
+        ShoppingList list = null;
+        try (Cursor cursor = mySQLiteDatabase.query(DBOpenHelper.LIST_ACTIVE, null, "_id = ?", new String[]{Integer.toString(listId)}, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    list = new ShoppingList(
+                            listId,
+                            cursor.getString(cursor.getColumnIndex(DBOpenHelper.NAME)),
+                            cursor.getLong(cursor.getColumnIndex(DBOpenHelper.CREATE_AT)),
+                            cursor.getLong(cursor.getColumnIndex(DBOpenHelper.UPDATE_AT))
+                    );
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG, "Error: You could not get List info." + e.toString());
+        }
+        return list;
+
     }
 
     //データ更新

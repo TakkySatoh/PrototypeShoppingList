@@ -1,9 +1,7 @@
 package asia.takkyssquare.prototypeshoppinglist;
 
 import android.content.Context;
-import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,7 +18,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import asia.takkyssquare.prototypeshoppinglist.ShoppingItemContent.ShoppingItem;
 import asia.takkyssquare.prototypeshoppinglist.ShoppingListFragment.OnListFragmentInteractionListener;
 import asia.takkyssquare.prototypeshoppinglist.dummy.DummyContent.DummyItem;
 
@@ -113,7 +110,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                         if (null != mClickListener) {
                             // Notify the active callbacks interface (the activity, if the
                             // fragment is attached to one) that an item has been selected.
-//                            mListener.onListFragmentInteraction(null, REQUEST_CODE_CREATE);
+//                            mListener.moveItemToOtherList(null, REQUEST_CODE_CREATE);
                             mClickListener.onItemClick(null, position, REQUEST_CODE_CREATE);
                         }
                     }
@@ -212,7 +209,7 @@ public class ItemRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                     if (null != mListener) {
                         // Notify the active callbacks interface (the activity, if the
                         // fragment is attached to one) that an item has been selected.
-//                        mListener.onListFragmentInteraction(_holder.mItem, REQUEST_CODE_UPDATE);
+//                        mListener.moveItemToOtherList(_holder.mItem, REQUEST_CODE_UPDATE);
                         mClickListener.onItemClick(_holder.mItem, position, REQUEST_CODE_UPDATE);
                     }
                 }

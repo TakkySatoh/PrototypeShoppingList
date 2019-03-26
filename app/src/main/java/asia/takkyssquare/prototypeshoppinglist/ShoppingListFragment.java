@@ -15,10 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import java.util.List;
-
-import asia.takkyssquare.prototypeshoppinglist.ShoppingItemContent.ShoppingItem;
-
 /**
  * A fragment representing a list of Items.
  * <p/>
@@ -143,72 +139,6 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         mItemTouchHelper.startDrag(viewHolder);
     }
 
-    /**
-     * Insert object to RecyclerView
-     *
-     * @param item
-     */
-    @Override
-    public void insertToRecyclerView(ItemRecyclerViewAdapter adapter, List<ShoppingItem> list, ShoppingItem item) {
-        int footerPosition = mRVAdapter.getToBuyItemAmount() + 1;
-        if (list != null) {
-            if (-1 != mPosition) {
-                if (item.isHasGot()) {
-                    list.add(footerPosition + 2, item);
-                } else {
-                    if (mPosition == footerPosition) {
-                        list.add(footerPosition, item);
-                    } else {
-                        list.add(mPosition + 1, item);
-                    }
-                    adapter.notifyItemInserted(list.indexOf(item));
-                }
-            }
-        }
-    }
-
-    /**
-     * Update object to RecyclerView
-     *
-     * @param item
-     */
-    @Override
-    public void updateToRecyclerView(ItemRecyclerViewAdapter
-                                             adapter, List<ShoppingItem> list, ShoppingItem item) {
-        insertToRecyclerView(adapter, list, item);
-        deleteFromRecyclerView(adapter, list, null);
-        adapter.notifyDataSetChanged();
-    }
-
-    /**
-     * Delete object from RecyclerView
-     *
-     * @param item
-     */
-    @Override
-    public void deleteFromRecyclerView(ItemRecyclerViewAdapter
-                                               adapter, List<ShoppingItem> list, ShoppingItem item) {
-        int index = 0;
-        boolean isDelete = false;
-        if (list != null) {
-            if (item != null) {
-                index = list.indexOf(item);
-                if (-1 != index) {
-                    isDelete = list.remove(item);
-                }
-            } else {
-                index = mPosition;
-                ShoppingItem oldItem = list.remove(mPosition);
-                if (!oldItem.equals(list.get(mPosition))) {
-                    isDelete = true;
-                }
-            }
-            if (isDelete) {
-                adapter.notifyItemRemoved(index);
-            }
-        }
-    }
-
     //    両RecyclerViewの項目中、チェックボックスの状態遷移に応じて、両リスト間を項目が移動
     public void moveItemBetweenRecyclerViews(boolean hasGot, int position) {
         ShoppingItem item = mRVAdapter.removeItem(position);
@@ -296,6 +226,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                         dbHelper.closeDB();
                     }
                 }
+                mListener.addItemOnFirestore(newItem);
                 Toast.makeText(getActivity(), data.getStringExtra(DBOpenHelper.NAME) + "を追加しました", Toast.LENGTH_LONG).show();
             }
         } else if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {  //アイテムデータ更新
@@ -331,6 +262,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                     }
                 }
                 Toast.makeText(getActivity(), data.getStringExtra(DBOpenHelper.NAME) + "を更新しました", Toast.LENGTH_LONG).show();
+                mListener.addItemOnFirestore(newItem);
             }
         } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_DELETE) {   //アイテム削除
             if (data != null) {
@@ -347,11 +279,12 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                     }
                 }
                 Toast.makeText(getActivity(), data.getStringExtra(DBOpenHelper.NAME) + "を削除しました", Toast.LENGTH_LONG).show();
+                mListener.deleteItemOnFirestore(data);
             }
 //        } else if (resultCode == ShoppingItemEditorActivity.RESULT_CODE_MOVE) {
 //            if (data != null) {
 //                ShoppingItem newItem = new ShoppingItemContent().createItem(data);
-//                mListener.onListFragmentInteraction(newItem, resultCode);
+//                mListener.moveItemToOtherList(newItem, resultCode);
 //                new GeneralDialogFragment.Builder(this)
 //                        .title(R.string.alert_move_to)
 //                        .items(MainActivity.mListNameList.toArray(new String[MainActivity.mListNameList.size()]))
@@ -385,7 +318,9 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
      */
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onListFragmentInteraction(ShoppingItem item, int requestCode);
+        void moveItemToOtherList(ShoppingItem item, int requestCode);
+        void addItemOnFirestore(ShoppingItem item);
+        void deleteItemOnFirestore(Intent data);
     }
 
 }

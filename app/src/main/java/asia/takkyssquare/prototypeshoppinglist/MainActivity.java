@@ -3,6 +3,7 @@ package asia.takkyssquare.prototypeshoppinglist;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -21,12 +22,19 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
-import asia.takkyssquare.prototypeshoppinglist.ShoppingItemContent.ShoppingItem;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements ShoppingListFragment.OnListFragmentInteractionListener, AdapterView.OnItemSelectedListener, GeneralDialogFragment.Callback {
 
@@ -35,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
     public static final int FINISH = 999;
 
     public static final String TAG = "DBHelper";
+    public static final String FB = "Firebase";
 
     public static List<String> mListNameList = new ArrayList<>();
 
@@ -65,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                 dbHelper.deleteDB(DBOpenHelper.ITEM_DELETED);
             }
             mListNameList = dbHelper.readListIndex(DBOpenHelper.LIST_ACTIVE);
-            listAmount = dbHelper.getCount(DBOpenHelper.LIST_INDEX);
+//            listAmount = dbHelper.getCount(DBOpenHelper.LIST_INDEX);
         } catch (Exception e) {
             e.printStackTrace();
             Log.w(TAG, "Error: DBHelper could not get list index or list amount." + e.toString());
@@ -83,7 +92,25 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         mSpinner.setAdapter(mSpAdapter);
         mSpinner.setOnItemSelectedListener(this);
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        /**
+         * 以下、Firestoreのサンプル
+         */
+//        FirebaseFirestore db = FirebaseFirestore.getInstance();
+//
+//        CollectionReference userRef = db.collection("users");
+//        Task<QuerySnapshot> snapshotTask = userRef.get();
+//        snapshotTask.addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+//            @Override
+//            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+//                if (task.isSuccessful()) {
+//                    for (QueryDocumentSnapshot document : task.getResult()) {
+//                        Log.d(TAG, document.getId() + " => " + document.getData());
+//                    }
+//                } else {
+//                    Log.w(TAG, "Error getting documents.", task.getException());
+//                }
+//            }
+//        });
     }
 
     /**
@@ -275,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                                 mSpAdapter.notifyDataSetChanged();
                                 message = getString(R.string.toast_finish_rename_list, oldListName, newListName);
                             }
-                            listAmount = dbHelper.getCount(DBOpenHelper.LIST_INDEX);
+//                            listAmount = dbHelper.getCount(DBOpenHelper.LIST_INDEX);
                         } catch (Exception e) {
                             e.printStackTrace();
                             Log.w(TAG, "Error: DBHelper could not finish editting table. " + e.toString());
@@ -283,6 +310,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                             dbHelper.closeDB();
                         }
                         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+                        addListOnFirestore(newListName);
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -292,6 +320,57 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                     }
                 })
                 .show();
+    }
+
+    /*
+     * リストをFirebaseへ登録
+     */
+    public void addListOnFirestore(String listName) {
+        DBHelper dbHelper = new DBHelper(getApplicationContext());
+        ShoppingList list = null;
+        try {
+            list = dbHelper.getListInfo(listName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w(TAG,"Error: DBHelper has som troubles."+e.toString());
+        } finally {
+            if (dbHelper != null){
+                dbHelper.closeDB();
+            }
+        }
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("list").document(Integer.toString(list.getListId()))
+                .set(list)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(FB,"List info successfully written!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(FB,"Error has happened."+e.toString());
+                    }
+                });
+    }
+
+    public void deleteListOnFirestore(int listId){
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("list").document(Integer.toString(listId))
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(FB,"List info successfully deleted!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(FB,"Error has happened."+e.toString());
+                    }
+                });
     }
 
     /**
@@ -306,6 +385,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
     public void onMyDialogSucceeded(int requestCode, int resultCode, Bundle params) {
         if (requestCode == DELETE_LIST && resultCode == DialogInterface.BUTTON_POSITIVE) {
             String listName = params.getString("listName");
+            int deletedListId = 0;
             mListNameList.remove(0);
             if (mListNameList.size() == 0) {
                 mListNameList.add(getString(R.string.spinner_empty));
@@ -316,7 +396,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
             DBHelper dbHelper = new DBHelper(getApplicationContext());
             try {
                 dbHelper.removeOrder(listName);
-                dbHelper.moveToDeletedTable(listName, DBOpenHelper.LIST_ACTIVE);
+                deletedListId = dbHelper.moveListToDeletedTable(listName, DBOpenHelper.LIST_ACTIVE);
             } catch (Exception e) {
                 e.printStackTrace();
                 Log.w(TAG, "Error: DBHelper could not move the list to deleted table." + e.toString());
@@ -324,6 +404,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                 dbHelper.closeDB();
             }
             Toast.makeText(getApplicationContext(), getString(R.string.toast_finish_delete_list, listName), Toast.LENGTH_LONG).show();
+            deleteListOnFirestore(deletedListId);
         } else if (requestCode == FINISH && resultCode == DialogInterface.BUTTON_POSITIVE) {
             onDestroy();
             finish();
@@ -354,7 +435,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
      * @param requestCode :リクエストコード(呼び出し元の値をそのまま格納)
      */
     @Override
-    public void onListFragmentInteraction(ShoppingItem item, int requestCode) {
+    public void moveItemToOtherList(ShoppingItem item, int requestCode) {
         new GeneralDialogFragment.Builder(this)
                 .title(R.string.alert_move_to)
                 .items(MainActivity.mListNameList.toArray(new String[MainActivity.mListNameList.size()]))
@@ -362,6 +443,44 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                 .positive(R.string.reply_move)
                 .negative(R.string.cancel)
                 .show();
+    }
+
+    @Override
+    public void addItemOnFirestore(ShoppingItem item) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("item").document(Integer.toString(item.getItemId()))
+                .set(item)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "DocumentSnapshot successfully written!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error writing document", e);
+                    }
+                });
+    }
+
+    @Override
+    public void deleteItemOnFirestore(Intent data){
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("item").document(Integer.toString(data.getIntExtra(DBOpenHelper.ITEM_ID,0)))
+                .delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(FB,"DocumentSnapshot successfully deleted!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(FB,"Error deleted document."+e.toString());
+                    }
+                });
     }
 
     /**
