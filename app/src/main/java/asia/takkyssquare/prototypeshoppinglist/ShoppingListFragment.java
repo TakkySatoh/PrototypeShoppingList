@@ -195,6 +195,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
             intent.putExtra(DBOpenHelper.LIST_ID, listId);
             intent.putExtra(DBOpenHelper.ORDER, 0);
         }
+        mListener.removeRegistration();
         startActivityForResult(intent, requestCode);
     }
 
@@ -321,6 +322,9 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
         void moveItemToOtherList(ShoppingItem item, int requestCode);
         void addItemOnFirestore(ShoppingItem item);
         void deleteItemOnFirestore(Intent data);
+        void removeRegistration();
+        void addRegistration();
+        void updateLastUpdateAt();
     }
 
 }

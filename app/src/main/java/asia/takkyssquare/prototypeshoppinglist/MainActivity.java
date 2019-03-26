@@ -27,7 +27,10 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -52,7 +55,13 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
     private ArrayAdapter<String> mSpAdapter;
 
-    private int listAmount = 0;
+    private FirebaseFirestore mFirestore;
+    private ListenerRegistration mListRegistration;
+    private ListenerRegistration mItemRegistration;
+
+    private long lastUpdateAt;
+    private int currentFragmentTag;
+//    private int listAmount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         /**
          * 以下、Firestoreのサンプル
          */
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        mFirestore = FirebaseFirestore.getInstance();
 //
 //        CollectionReference userRef = db.collection("users");
 //        Task<QuerySnapshot> snapshotTask = userRef.get();
@@ -170,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
             DBHelper dbHelper = new DBHelper(getApplicationContext());
             try {
                 listId = dbHelper.getListId(listName);
+                currentFragmentTag = listId;
                 //ここにlistId未取得時のエラー処理を書く
                 tag = Integer.toString(listId);
                 fragment = new ShoppingListFragment();
@@ -332,45 +342,45 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
             list = dbHelper.getListInfo(listName);
         } catch (Exception e) {
             e.printStackTrace();
-            Log.w(TAG,"Error: DBHelper has som troubles."+e.toString());
+            Log.w(TAG, "Error: DBHelper has som troubles." + e.toString());
         } finally {
-            if (dbHelper != null){
+            if (dbHelper != null) {
                 dbHelper.closeDB();
             }
         }
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("list").document(Integer.toString(list.getListId()))
+        mFirestore.collection("list").document(Integer.toString(list.getListId()))
                 .set(list)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(FB,"List info successfully written!");
+                        Log.d(FB, "List info successfully written!");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(FB,"Error has happened."+e.toString());
+                        Log.w(FB, "Error has happened." + e.toString());
                     }
                 });
+        updateLastUpdateAt();
     }
 
-    public void deleteListOnFirestore(int listId){
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("list").document(Integer.toString(listId))
+    public void deleteListOnFirestore(int listId) {
+        mFirestore.collection("list").document(Integer.toString(listId))
                 .delete()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(FB,"List info successfully deleted!");
+                        Log.d(FB, "List info successfully deleted!");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(FB,"Error has happened."+e.toString());
+                        Log.w(FB, "Error has happened." + e.toString());
                     }
                 });
+        updateLastUpdateAt();
     }
 
     /**
@@ -447,8 +457,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
 
     @Override
     public void addItemOnFirestore(ShoppingItem item) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("item").document(Integer.toString(item.getItemId()))
+        mFirestore.collection("item").document(Integer.toString(item.getItemId()))
                 .set(item)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -462,25 +471,113 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                         Log.w(TAG, "Error writing document", e);
                     }
                 });
+        updateLastUpdateAt();
     }
 
     @Override
-    public void deleteItemOnFirestore(Intent data){
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("item").document(Integer.toString(data.getIntExtra(DBOpenHelper.ITEM_ID,0)))
+    public void deleteItemOnFirestore(Intent data) {
+        mFirestore.collection("item").document(Integer.toString(data.getIntExtra(DBOpenHelper.ITEM_ID, 0)))
                 .delete()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(FB,"DocumentSnapshot successfully deleted!");
+                        Log.d(FB, "DocumentSnapshot successfully deleted!");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(FB,"Error deleted document."+e.toString());
+                        Log.w(FB, "Error deleted document." + e.toString());
                     }
                 });
+        updateLastUpdateAt();
+    }
+
+    @Override
+    public void removeRegistration() {
+        mListRegistration.remove();
+        mItemRegistration.remove();
+    }
+
+    @Override
+    public void addRegistration() {
+        mListRegistration = mFirestore.collection("list")
+                .whereGreaterThan("updateAt", lastUpdateAt)
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@javax.annotation.Nullable QuerySnapshot snapshot, @javax.annotation.Nullable FirebaseFirestoreException e) {
+                        if (e != null) {
+                            Log.w(FB, "Listen failed.", e);
+                            return;
+                        }
+
+                        DBHelper dbHelper = new DBHelper(getBaseContext());
+                        try {
+                            dbHelper.beginTransaction();
+                            for (QueryDocumentSnapshot doc : snapshot) {
+                                ShoppingList list = doc.toObject(ShoppingList.class);
+                                dbHelper.updateListIndex(null, list.getListName());
+                            }
+                            dbHelper.setTransactionSuccessful();
+                            mListNameList = dbHelper.readListIndex(DBOpenHelper.LIST_ACTIVE);
+                            mSpAdapter.notifyDataSetChanged();
+                            if (dbHelper.getListId(mListNameList.get(0)) == currentFragmentTag) {
+                                replaceFragment(mListNameList.get(0));
+                            }
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                            Log.w(TAG, "Error: DBHelper failed to update list info." + e1.toString());
+                        } finally {
+                            if (dbHelper != null) {
+                                dbHelper.endTransaction();
+                                dbHelper.closeDB();
+                            }
+                        }
+                    }
+                });
+        mItemRegistration = mFirestore.collection("item")
+                .whereGreaterThan("updateAt", lastUpdateAt)
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@javax.annotation.Nullable QuerySnapshot snapshot, @javax.annotation.Nullable FirebaseFirestoreException e) {
+                        if (e != null) {
+                            Log.w(FB, "Listen failed.", e);
+                            return;
+                        }
+
+                        List<Integer> listIdIndex = new ArrayList<>();
+                        DBHelper dbHelper = new DBHelper(getBaseContext());
+                        try {
+                            dbHelper.beginTransaction();
+                            for (QueryDocumentSnapshot doc : snapshot) {
+                                ShoppingItem item = doc.toObject(ShoppingItem.class);
+                                dbHelper.updateItem(item);
+                                dbHelper.updateOrder(item);
+                                listIdIndex.add(item.getListId());
+                            }
+                            dbHelper.setTransactionSuccessful();
+                            for (int listId : listIdIndex) {
+                                if (listId == currentFragmentTag) {
+                                    replaceFragment(mListNameList.get(0));
+                                    break;
+                                }
+                            }
+                        } catch (Exception e1) {
+                            e1.printStackTrace();
+                            Log.w(TAG, "Error: DBHelper failed to update item info." + e1.toString());
+                        } finally {
+                            if (dbHelper != null) {
+                                dbHelper.endTransaction();
+                                dbHelper.closeDB();
+                            }
+                        }
+                    }
+                });
+    }
+
+    @Override
+    public void updateLastUpdateAt() {
+        lastUpdateAt = System.currentTimeMillis();
     }
 
     /**
