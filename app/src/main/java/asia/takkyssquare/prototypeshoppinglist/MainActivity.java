@@ -349,6 +349,9 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         updateLastUpdateAt();
     }
 
+    /**
+     * リストをFirestoreより削除
+     */
     public void deleteListOnFirestore(int listId) {
         mFirestore.collection("list").document(Integer.toString(listId))
                 .delete()
@@ -439,6 +442,9 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                 .show();
     }
 
+    /**
+     * アイテムをFirestoreへ追加・情報更新
+     */
     @Override
     public void addItemOnFirestore(ShoppingItem item) {
         mFirestore.collection("item").document(Integer.toString(item.getItemId()))
@@ -458,6 +464,9 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         updateLastUpdateAt();
     }
 
+    /**
+     * アイテムをFirestoreより削除
+     */
     @Override
     public void deleteItemOnFirestore(Intent data) {
         mFirestore.collection("item").document(Integer.toString(data.getIntExtra(DBOpenHelper.ITEM_ID, 0)))
@@ -477,12 +486,9 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
         updateLastUpdateAt();
     }
 
-    @Override
-    public void removeRegistration() {
-        mListRegistration.remove();
-        mItemRegistration.remove();
-    }
-
+    /**
+     * Firestoreのリアルタイム更新用リスナを設定
+     */
     @Override
     public void addRegistration() {
         mListRegistration = mFirestore.collection("list")
@@ -559,6 +565,18 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                 });
     }
 
+    /**
+     * Firestoreのリアルタイム更新用リスナを解除
+     */
+    @Override
+    public void removeRegistration() {
+        mListRegistration.remove();
+        mItemRegistration.remove();
+    }
+
+    /**
+     * 最終更新日時を記録(Firestore用)
+     */
     @Override
     public void updateLastUpdateAt() {
         lastUpdateAt = System.currentTimeMillis();

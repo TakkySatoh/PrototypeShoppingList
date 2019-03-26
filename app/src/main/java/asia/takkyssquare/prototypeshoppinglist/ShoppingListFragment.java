@@ -195,7 +195,7 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
             intent.putExtra(DBOpenHelper.LIST_ID, listId);
             intent.putExtra(DBOpenHelper.ORDER, 0);
         }
-        mListener.removeRegistration();
+//        mListener.removeRegistration();
         startActivityForResult(intent, requestCode);
     }
 
@@ -227,8 +227,8 @@ public class ShoppingListFragment extends Fragment implements OnStartDragListene
                         dbHelper.closeDB();
                     }
                 }
-                mListener.addItemOnFirestore(newItem);
                 Toast.makeText(getActivity(), data.getStringExtra(DBOpenHelper.NAME) + "を追加しました", Toast.LENGTH_LONG).show();
+                mListener.addItemOnFirestore(newItem);
             }
         } else if (requestCode == ItemRecyclerViewAdapter.REQUEST_CODE_UPDATE && resultCode == ShoppingItemEditorActivity.RESULT_OK) {  //アイテムデータ更新
             if (data != null) {
