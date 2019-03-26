@@ -105,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
          * 以下、Firestoreのサンプル
          */
         mFirestore = FirebaseFirestore.getInstance();
+        addRegistration();
 //
 //        CollectionReference userRef = db.collection("users");
 //        Task<QuerySnapshot> snapshotTask = userRef.get();

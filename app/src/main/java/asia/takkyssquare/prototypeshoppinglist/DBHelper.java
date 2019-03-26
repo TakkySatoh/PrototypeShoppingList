@@ -7,7 +7,13 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.support.annotation.NonNull;
 import android.util.Log;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -204,6 +210,8 @@ public class DBHelper extends ContextWrapper {
     public List<ShoppingItem> createSampleItemList(int count, String place) {
         int listId = getListId(place);
         List<ShoppingItem> itemList = new ArrayList<>();
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        WriteBatch batch = firestore.batch();
         for (int i = 0; i < count; i++) {
             ShoppingItem item = new ShoppingItem(
                     false,
@@ -225,7 +233,21 @@ public class DBHelper extends ContextWrapper {
             itemList.get(i).setItemId(itemId);
             itemList.get(i).setOrder(itemId);
             updateOrder(itemList.get(i));
+            batch.set(firestore.collection("item").document(Integer.toString(item.getItemId())), item);
         }
+        batch.commit()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "Batch success!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Transaction failure."+e.toString());
+                    }
+                });
         itemList.add(0, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
         itemList.add(count / 2 + 1, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_FOOTER));
         itemList.add(count / 2 + 2, new ShoppingItem(ShoppingItemContent.CONTENT_TYPE_HEADER));
