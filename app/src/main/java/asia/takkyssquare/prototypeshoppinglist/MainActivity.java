@@ -332,7 +332,8 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
                 dbHelper.closeDB();
             }
         }
-        mFirestore.collection("list").document(Integer.toString(list.getListId()))
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        firestore.collection("list").document(Integer.toString(list.getListId()))
                 .set(list)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -353,7 +354,8 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
      * リストをFirestoreより削除
      */
     public void deleteListOnFirestore(int listId) {
-        mFirestore.collection("list").document(Integer.toString(listId))
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        firestore.collection("list").document(Integer.toString(listId))
                 .delete()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -447,7 +449,8 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
      */
     @Override
     public void addItemOnFirestore(ShoppingItem item) {
-        mFirestore.collection("item").document(Integer.toString(item.getItemId()))
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        firestore.collection("item").document(Integer.toString(item.getItemId()))
                 .set(item)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -469,7 +472,8 @@ public class MainActivity extends AppCompatActivity implements ShoppingListFragm
      */
     @Override
     public void deleteItemOnFirestore(Intent data) {
-        mFirestore.collection("item").document(Integer.toString(data.getIntExtra(DBOpenHelper.ITEM_ID, 0)))
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        firestore.collection("item").document(Integer.toString(data.getIntExtra(DBOpenHelper.ITEM_ID, 0)))
                 .delete()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
